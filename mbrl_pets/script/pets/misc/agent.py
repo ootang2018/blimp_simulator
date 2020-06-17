@@ -14,13 +14,12 @@ from math import pi
 from std_msgs.msg import Float64, Float64MultiArray
 from sensor_msgs.msg import JointState, Imu
 from mav_msgs.msg import Actuators
-from geometry_msgs.msg import Twist, TwistStamped, Point, PointStamped
+from geometry_msgs.msg import Twist, TwistStamped, Pose, Point, PointStamped
 from std_srvs.srv import Empty
 from visualization_msgs.msg import *
 
 # mine
 from pets.misc.myTF import MyTF
-# from pets.controller import MPC
 from gazeboConnection import GazeboConnection
 
 
@@ -85,6 +84,16 @@ class Agent:
         self.linear_acceleration = [0,0,0]
         self.reward = Float64()
 
+
+        # target flag
+        '''
+        None = none
+        1 = teleokeyboard
+        2 = interactive_target
+        3 = moving_target
+        '''
+        self.target_flag = None
+
         rospy.loginfo("[Agent Node] Load and Initialize Parameters Finished")
 
     def _create_pubs_subs(self):
@@ -94,7 +103,11 @@ class Agent:
         rospy.Subscriber(
             "/target/update_full",
             InteractiveMarkerInit,
-            self._target_callback)
+            self._interactive_target_callback)
+        rospy.Subscriber(
+            "/moving_target",
+            Pose,
+            self._moving_target_callback)
         rospy.Subscriber(
             "/blimp/ground_truth/imu",
             Imu,
@@ -217,7 +230,7 @@ class Agent:
         velocity = msg
         self.velocity = [velocity.twist.linear.x, velocity.twist.linear.y, velocity.twist.linear.z]
 
-    def _target_callback(self, msg):
+    def _interactive_target_callback(self, msg):
         """
         InteractiveMarkerInit
 
@@ -242,23 +255,54 @@ class Agent:
         :param msg:
         :return:
         """
-        target_pose = msg.markers[0].pose
+        if (self.target_flag >= 2 or self.target_flag==None):
+            self.target_flag = 2
+            target_pose = msg.markers[0].pose
 
-        # extract orientaion and convert to euler angle
-        a = target_pose.orientation.x
-        b = target_pose.orientation.y
-        c = target_pose.orientation.z
-        d = target_pose.orientation.w
+            euler = self.euler_from_pose(target_pose)
+
+            target_phi, target_the, target_psi = 0, 0, -1*euler[2]
+
+            self.target_angle = [target_phi, target_the, target_psi]
+            self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
+            # self.target_position = [0, 0, 7]
+    
+    def _moving_target_callback(self, msg):
+        """
+        geometry_msgs/Point position
+          float64 x
+          float64 y
+          float64 z
+        geometry_msgs/Quaternion orientation
+          float64 x
+          float64 y
+          float64 z
+          float64 w
+
+        :param msg:
+        :return:
+        """
+        if (self.target_flag >= 3 or self.target_flag==None):
+            self.target_flag = 3
+            target_pose = msg
+
+            euler = self.euler_from_pose(target_pose)
+
+            target_phi, target_the, target_psi = 0, 0, -1*euler[2]
+
+            self.target_angle = [target_phi, target_the, target_psi]
+            self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
+            # self.target_position = [0, 0, 7]
+
+    def euler_from_pose(self, pose):
+        a = pose.orientation.x
+        b = pose.orientation.y
+        c = pose.orientation.z
+        d = pose.orientation.w
         euler = MyTF.euler_from_quaternion(a,b,c,d)
-        target_phi = 0
-        target_the = 0
-        # target_psi = 0
-        target_psi = -1*euler[2]
-        self.target_angle = [target_phi, target_the, target_psi]
 
-        # extract position
-        self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
-        # self.target_position = [0, 0, 7]
+        return euler
+
 
     def reset(self):
         self.gaz.resetSim()
@@ -353,16 +397,3 @@ class Agent:
             "reward_sum": reward_sum,
             "rewards": np.array(rewards),
         }
-
-# if __name__ == "__main__":
-#     rospy.init_node('agent_node', anonymous=False)
-#     rospy.loginfo("Agent Node Initialising...")
-
-#     cfg = create_config('blimp', "MPC", [], [], '/home/yliu_local/blimpRL_ws/src/RL_log/pets_log')
-
-#     task_hor = 100
-#     policy = MPC(cfg.ctrl_cfg)
-
-#     # Agent()
-#     # Agent.sample(task_hor, policy)
-

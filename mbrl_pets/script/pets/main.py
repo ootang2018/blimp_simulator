@@ -9,6 +9,7 @@ import pprint
 import sys
 import rospy
 
+#TODO don't use direct path
 pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script'
 sys.path.append(pkg_path)
 pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets'
@@ -35,11 +36,6 @@ def main(env, ctrl_type, ctrl_args, overrides, logdir):
 
     ctrl_args = DotMap(**{key: val for (key, val) in ctrl_args})
 
-    # model_dir = "/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/log/2019-12-05--16:46:07"
-    # overrides.append(["ctrl_cfg.prop_cfg.model_init_cfg.model_dir", model_dir])
-    # overrides.append(["ctrl_cfg.prop_cfg.model_init_cfg.load_model", "True"])
-    # overrides.append(["ctrl_cfg.prop_cfg.model_pretrained", "True"])
-
     cfg = create_config(env, ctrl_type, ctrl_args, overrides, logdir)
     cfg.pprint()
 
@@ -55,15 +51,11 @@ def main(env, ctrl_type, ctrl_args, overrides, logdir):
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-env', '--env_arg', action='append', nargs=2, default=[],
-    #                     help='Environment name: blimp')
-    # parser.add_argument('-ca', '--ctrl_arg', action='append', nargs=2, default=[],
-    #                     help='Controller arguments, see https://github.com/kchua/handful-of-trials#controller-arguments')
-    # parser.add_argument('-o', '--override', action='append', nargs=2, default=[],
-    #                     help='Override default parameters, see https://github.com/kchua/handful-of-trials#overrides')
-    # parser.add_argument('-logdir', type=str, default='log',
-    #                     help='Directory to which results will be logged (default: ./log)')
-    # args = parser.parse_args()
 
-    main('blimp', "MPC", [], [], '/home/yliu_local/blimpRL_ws/src/RL_log/pets_log')
+    env = 'blimp'
+    ctrl_type = "MPC"
+    ctrl_args = []
+    overrides = []
+    logdir = '/home/yliu_local/blimpRL_ws/src/RL_log/pets_log'
+
+    main(env, ctrl_type, ctrl_args, overrides, logdir)
