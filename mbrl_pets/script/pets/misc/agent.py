@@ -296,8 +296,8 @@ class Agent:
 
     def reset(self):
         self.gaz.resetSim()
-        obs, obs_target, reward, done = self._get_obs()
-        return obs, obs_target
+        obs, reward, done = self._get_obs()
+        return obs
 
     def step(self,action):
         act = Float64MultiArray()
@@ -305,8 +305,8 @@ class Agent:
         act.data = action
         self.action_publisher.publish(act)
 
-        obs, obs_target, reward, done = self._get_obs()
-        return obs, obs_target, reward, done
+        obs, reward, done = self._get_obs()
+        return obs , reward, done
 
     def _get_acts(self):
         action = self.action
@@ -323,22 +323,19 @@ class Agent:
         state.extend(self.velocity)
         state.extend(self.linear_acceleration)
 
-        #extend target state
-        target_state = []
-        target_state.extend(self.target_angle)
-        target_state.extend(self.target_position)
+        state.extend(self.target_angle)
+        state.extend(self.target_position)
 
         #extend reward
         if self.reward is None:
             reward = -1
         else:
             reward = self.reward.data
-        # print(reward)
 
         #done is not used in this experiment
         done = False
 
-        return state, target_state, reward, done
+        return state, reward, done
 
 
     def sample(self, horizon, policy, record_fname=None):
@@ -354,34 +351,26 @@ class Agent:
             The keys of the dictionary are 'obs', 'ac', and 'reward_sum'.
         """
         times, rewards = [], []
-        O, O_target = self.reset()
-        O = [O]; O_target = [O_target]
-        A, reward_sum, done = [], 0, False
+        O, A, reward_sum, done = [self.reset()], [], 0, False
 
         policy.reset()
         for t in range(horizon):
             start = time.time()
-            O_join = [*O[t],*O_target[t]]
-            print(O[t])
-            print(O_target[t])
-            print(O_join)
-            print("===============================")
 
-            A.append(policy.act( O_join, t ))
+            A.append(policy.act( O[t], t ))
             times.append(time.time() - start)
             # print(self.action)
 
             if self.noise_stddev is None:
-                obs, obs_target, reward, done = self.step(A[t])
+                obs, reward, done = self.step(A[t])
 
             else:
                 na = np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU]) # noise stdv
                 nb = self.ac_ub # noise scale
                 action = A[t] + na*nb # add scaled action noise
                 action = np.minimum(np.maximum(action, self.ac_lb), self.ac_ub)
-                obs, obs_target, reward, done = self.step(action)
+                obs, reward, done = self.step(action)
             O.append(obs)  
-            O_target.append(obs_target)
             reward_sum += reward
             rewards.append(reward)
             if done:
@@ -392,11 +381,8 @@ class Agent:
         print("Average action selection time: ", np.mean(times))
         print("Rollout length: ", len(A))
 
-        print("O size",len(O))
-        print("O_target_size", len(O_target))
         return {
             "obs": np.array(O),
-            "obs_target": np.array(O_target),
             "ac": np.array(A),
             "reward_sum": reward_sum,
             "rewards": np.array(rewards),

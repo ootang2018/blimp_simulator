@@ -66,7 +66,7 @@ class MBRLExperiment:
         """
         os.makedirs(self.logdir, exist_ok=True)
 
-        traj_obs, traj_obs_target, traj_acs, traj_rets, traj_rews = [], [], [], [], []
+        traj_obs, traj_acs, traj_rets, traj_rews = [], [], [], []
 
         # Perform initial rollouts
         samples = []
@@ -77,9 +77,9 @@ class MBRLExperiment:
                 )
             )
             traj_obs.append(samples[-1]["obs"])
-            traj_obs_target.append(samples[-1]["obs_target"])
             traj_acs.append(samples[-1]["ac"])
             traj_rews.append(samples[-1]["rewards"])
+        
 
         if self.ninit_rollouts > 0:
             self.policy.train(
@@ -115,7 +115,6 @@ class MBRLExperiment:
                 )
             print("Rewards obtained:", [sample["reward_sum"] for sample in samples[:self.neval]])
             traj_obs.extend([sample["obs"] for sample in samples[:self.nrollouts_per_iter]])
-            traj_obs_target.extend([sample["obs_target"] for sample in samples[:self.nrollouts_per_iter]])
             traj_acs.extend([sample["ac"] for sample in samples[:self.nrollouts_per_iter]])
             traj_rets.extend([sample["reward_sum"] for sample in samples[:self.neval]])
             traj_rews.extend([sample["rewards"] for sample in samples[:self.nrollouts_per_iter]])
@@ -126,7 +125,6 @@ class MBRLExperiment:
                 os.path.join(self.logdir, "logs.mat"),
                 {
                     "observations": traj_obs,
-                    "observations_target": traj_obs_target,
                     "actions": traj_acs,
                     "returns": traj_rets,
                     "rewards": traj_rews
@@ -136,6 +134,7 @@ class MBRLExperiment:
             if len(os.listdir(iter_dir)) == 0:
                 os.rmdir(iter_dir)
 
+            # NN Training
             if i < self.ntrain_iters - 1:
                 self.policy.train(
                     [sample["obs"] for sample in samples],

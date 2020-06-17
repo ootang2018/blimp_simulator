@@ -16,10 +16,10 @@ from pets.misc.agent import Agent
 
 class BlimpConfigModule:
     ENV_NAME = "blimp"
-    TASK_HORIZON = 10
-    NTRAIN_ITERS = 3000
+    TASK_HORIZON = 60
+    NTRAIN_ITERS = 250
     NROLLOUTS_PER_ITER = 1
-    PLAN_HOR = 7
+    PLAN_HOR = 10
     MODEL_IN, MODEL_OUT = 29, 21
 
     def __init__(self):
@@ -74,8 +74,9 @@ class BlimpConfigModule:
     """
     @staticmethod
     def obs_cost_fn(obs):
-        w_dist = 0.8
-        w_ang = 0.2
+        w_dist = 0.5
+        w_ang = 0.1
+        w_dir = 0.4
 
         '''
         state
@@ -94,11 +95,14 @@ class BlimpConfigModule:
         # dist_abs_cost = tf.reduce_sum(tf.abs(obs[:, 18:21] - obs[:, 6:9]), axis=1) # abs distance
         dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 18:21] - obs[:, 6:9]), axis=1)) # mse distance
 
-        # define angle cost
+        # define angle cost (phi, the)
         # ang_abs_cost = tf.reduce_sum(tf.abs(obs[:, 15:18] - obs[:, 0:3]), axis=1) # abs angle
-        ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 15:18] - obs[:, 0:3]), axis=1)) # mse angle
+        ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 15:16] - obs[:, 0:2]), axis=1)) # mse angle
 
-        return w_dist*dist_mse_cost + w_ang*ang_mse_cost
+        # define direction cost (psi)
+        dir_abs_cost = tf.abs(obs[:, 17] - obs[:, 0]) # psi angle
+
+        return w_dist*dist_mse_cost + w_ang*ang_mse_cost + w_dir*dir_abs_cost
 
     @staticmethod
     def ac_cost_fn(acs):
@@ -112,7 +116,7 @@ class BlimpConfigModule:
 
     def nn_constructor(self, model_init_cfg):
         model = get_required_argument(model_init_cfg, "model_class", "Must provide model class")(DotMap(
-            name="model", num_networks=10 , #get_required_argument(model_init_cfg, "num_nets", "Must provide ensemble size")
+            name="model", num_networks=5 , #get_required_argument(model_init_cfg, "num_nets", "Must provide ensemble size")
             sess=self.SESS, load_model=model_init_cfg.get("load_model", False),
             model_dir=model_init_cfg.get("model_dir", None)
         ))
