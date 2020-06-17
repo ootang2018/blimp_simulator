@@ -20,7 +20,7 @@ class MyTF():
 		t4 = +1.0 - 2.0 * (y * y + z * z)
 		yaw = math.atan2(t3, t4)
 
-		return [yaw, pitch, roll]
+		return [roll, pitch, yaw]
 
 
 	def quaternion_from_euler(roll, pitch, yaw):
