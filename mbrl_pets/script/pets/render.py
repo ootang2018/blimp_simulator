@@ -9,21 +9,18 @@ import pprint
 import sys
 import rospy
 
-pkg_path = '/home/yliu2/catkin_ws_py3/src/mbrl_hof/script/'
+#TODO don't use direct path
+pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script'
 sys.path.append(pkg_path)
-pkg_path = '/home/yliu2/catkin_ws_py3/src/mbrl_hof/script/pets/config'
+pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets'
 sys.path.append(pkg_path)
-pkg_path = '/home/yliu2/catkin_ws_py3/src/mbrl_hof/script/pets/controller'
+pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/config'
 sys.path.append(pkg_path)
-pkg_path = '/home/yliu2/catkin_ws_py3/src/mbrl_hof/script/pets/misc'
+pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/controller'
 sys.path.append(pkg_path)
-pkg_path = '/home/yliu2/catkin_ws_py3/src/mbrl_hof/script/pets/modeling'
+pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/misc'
 sys.path.append(pkg_path)
-pkg_path = '/home/yliu2/catkin_ws_py3/src/mbrl_hof/script/pets/modeling/layers'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu2/catkin_ws_py3/src/mbrl_hof/script/pets/modeling/models'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu2/catkin_ws_py3/src/mbrl_hof/script/pets/modeling/utils/'
+pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/modeling'
 sys.path.append(pkg_path)
 
 from dotmap import DotMap
@@ -38,7 +35,7 @@ def main(env, ctrl_type, ctrl_args, overrides, logdir):
     ctrl_args = DotMap(**{key: val for (key, val) in ctrl_args})
 
     ## change this get access to the model
-    model_dir = "/home/yliu2/catkin_ws_py3/src/mbrl_hof/script/pets/log/2020-01-18--12:14:55"
+    model_dir = "/home/yliu_local/blimpRL_ws/src/RL_log/pets_log/2020-01-18--12:14:55"
 
     overrides.append(["ctrl_cfg.prop_cfg.model_init_cfg.model_dir", model_dir])
     overrides.append(["ctrl_cfg.prop_cfg.model_init_cfg.load_model", "True"])
@@ -61,15 +58,10 @@ def main(env, ctrl_type, ctrl_args, overrides, logdir):
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-env', '--env_arg', action='append', nargs=2, default=[],
-    #                     help='Environment name: blimp')
-    # parser.add_argument('-ca', '--ctrl_arg', action='append', nargs=2, default=[],
-    #                     help='Controller arguments, see https://github.com/kchua/handful-of-trials#controller-arguments')
-    # parser.add_argument('-o', '--override', action='append', nargs=2, default=[],
-    #                     help='Override default parameters, see https://github.com/kchua/handful-of-trials#overrides')
-    # parser.add_argument('-logdir', type=str, default='log',
-    #                     help='Directory to which results will be logged (default: ./log)')
-    # args = parser.parse_args()
+    env = 'blimp'
+    ctrl_type = "MPC"
+    ctrl_args = []
+    overrides = []
+    logdir = '/home/yliu_local/blimpRL_ws/src/RL_log/pets_log'
 
-    main('blimp', "MPC", [], [], '/home/yliu2/catkin_ws_py3/src/mbrl_hof/script/pets/log')
+    main(env, ctrl_type, ctrl_args, overrides, logdir)

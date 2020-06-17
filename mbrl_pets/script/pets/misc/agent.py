@@ -61,14 +61,24 @@ class Agent:
         # action space
         # m1 m2 m3 s ftop fbot fleft fright
         self.action_space = np.array([0, 0, 0, 0, 0, 0, 0, 0])
-        # self.ac_ub = np.array([70, 70, 50, pi/2, pi/36, pi/36, pi/36, pi/36])
-        self.ac_ub = np.array([70, 70, 50, pi/2, 0, 0, 0, 0])
+        self.ac_ub = np.array([70, 70, 30, pi/2, pi/36, pi/36, pi/36, pi/36])
+        # self.ac_ub = np.array([60, 60, 30, pi/2, 0, 0, 0, 0])
         self.ac_lb = -self.ac_ub
         self.dU = 8
         self.action = (self.ac_ub + self.ac_lb)/2
 
         # observation space
-        # phi the psi phitarget thetarget psitarget p q r x y z xtarget ytarget ztarget vx vy vz ax ay az
+        '''
+        state
+        0:2 angle
+        3:5 angular velocity
+        6:8 position
+        9:11 velocity
+        12:14 acceleration
+
+        15:17 target angle
+        18:20 target_position
+        '''
         self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         self.ob_ub = np.array([pi, pi, pi, pi, pi, pi, pi/2, pi/2, pi/2, 5, 5, 5, 5 ,5 ,5 , 2.5, 2.5, 2.5, 1.25, 1.25, 1.25])
         self.ob_lb = -self.ob_ub
@@ -258,11 +268,8 @@ class Agent:
         if (self.target_flag >= 2 or self.target_flag==0):
             self.target_flag = 2
             target_pose = msg.markers[0].pose
-
             euler = self._euler_from_pose(target_pose)
-
             target_phi, target_the, target_psi = 0, 0, euler[2]
-
             self.target_angle = [target_phi, target_the, target_psi]
             self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
             # self.target_position = [0, 0, 7]
@@ -285,12 +292,8 @@ class Agent:
         if (self.target_flag >= 3 or self.target_flag==0):
             self.target_flag = 3
             target_pose = msg
-
             euler = self._euler_from_pose(target_pose)
-
             target_phi, target_the, target_psi = 0, 0, euler[2]
-
-
             self.target_angle = [target_phi, target_the, target_psi]
             self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
             # self.target_position = [0, 0, 7]
@@ -301,14 +304,12 @@ class Agent:
         c = pose.orientation.z
         d = pose.orientation.w
         euler = MyTF.euler_from_quaternion(a,b,c,d)
-
         return euler
-
 
     def reset(self):
         self.gaz.resetSim()
-        obs, reward, done = self._get_obs()
-        return obs
+        obs, obs_target, reward, done = self._get_obs()
+        return obs, obs_target
 
     def step(self,action):
         act = Float64MultiArray()
@@ -316,8 +317,8 @@ class Agent:
         act.data = action
         self.action_publisher.publish(act)
 
-        obs, reward, done = self._get_obs()
-        return obs, reward, done
+        obs, obs_target, reward, done = self._get_obs()
+        return obs, obs_target, reward, done
 
     def _get_acts(self):
         action = self.action
@@ -329,13 +330,15 @@ class Agent:
         #extend state
         state = []
         state.extend(self.angle)
-        state.extend(self.target_angle)
         state.extend(self.angular_velocity)
         state.extend(self.position)
-        state.extend(self.target_position)
         state.extend(self.velocity)
         state.extend(self.linear_acceleration)
-        # print(state)
+
+        #extend target state
+        target_state = []
+        target_state.extend(self.target_angle)
+        target_state.extend(self.target_position)
 
         #extend reward
         if self.reward is None:
@@ -347,7 +350,7 @@ class Agent:
         #done is not used in this experiment
         done = False
 
-        return state, reward, done
+        return state, target_state, reward, done
 
 
     def sample(self, horizon, policy, record_fname=None):
@@ -363,25 +366,29 @@ class Agent:
             The keys of the dictionary are 'obs', 'ac', and 'reward_sum'.
         """
         times, rewards = [], []
-        O, A, reward_sum, done = [self.reset()], [], 0, False
+        O, O_target = self.reset()
+        O = [O]; O_target = [O_target]
+        A, reward_sum, done = [], 0, False
 
         policy.reset()
         for t in range(horizon):
             start = time.time()
-            A.append(policy.act(O[t], t))
+            O_join = [*O[t],*O_target[t]]
+            A.append(policy.act( O_join, t ))
             times.append(time.time() - start)
             # print(self.action)
 
             if self.noise_stddev is None:
-                obs, reward, done = self.step(A[t])
+                obs, obs_target, reward, done = self.step(A[t])
 
             else:
                 na = np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU]) # noise stdv
                 nb = self.ac_ub # noise scale
                 action = A[t] + na*nb # add scaled action noise
                 action = np.minimum(np.maximum(action, self.ac_lb), self.ac_ub)
-                obs, reward, done = self.step(action)
-            O.append(obs)
+                obs, obs_target, reward, done = self.step(action)
+            O.append(obs)  
+            O_target.append(obs_target)
             reward_sum += reward
             rewards.append(reward)
             if done:
@@ -394,6 +401,7 @@ class Agent:
 
         return {
             "obs": np.array(O),
+            "obs_target": np.array(O_target),
             "ac": np.array(A),
             "reward_sum": reward_sum,
             "rewards": np.array(rewards),

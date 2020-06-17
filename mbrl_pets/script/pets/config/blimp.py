@@ -74,27 +74,31 @@ class BlimpConfigModule:
     """
     @staticmethod
     def obs_cost_fn(obs):
-        w_dist = 1
-        w_ang = 0
-        w_dir = 0
+        w_dist = 0.8
+        w_ang = 0.2
+
+        '''
+        state
+        0:2 angle
+        3:5 angular velocity
+        6:8 position
+        9:11 velocity
+        12:14 acceleration
+
+        15:17 target angle
+        18:20 target_position
+        '''
 
         # define distance cost
-        # zdist_abs_cost = tf.abs(obs[:, 14] - obs[:, 11]) # z distance
-        # dist_abs_cost = tf.reduce_sum(tf.abs(obs[:, 12:15] - obs[:, 9:12]), axis=1) # abs distance
-        dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 12:15] - obs[:, 9:12]), axis=1)) # mse distance
+        # zdist_abs_cost = tf.abs(obs[:, 20] - obs[:, 8]) # z distance
+        # dist_abs_cost = tf.reduce_sum(tf.abs(obs[:, 18:21] - obs[:, 6:9]), axis=1) # abs distance
+        dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 18:21] - obs[:, 6:9]), axis=1)) # mse distance
 
-        # define angular cost (phi and the)
-        # ang_abs_cost = tf.reduce_sum(tf.abs(obs[:, 3:6] - obs[:, 0:3]), axis=1) # abs angle
-        ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 3:5] - obs[:, 0:2]), axis=1)) # mse angle
+        # define angle cost
+        # ang_abs_cost = tf.reduce_sum(tf.abs(obs[:, 15:18] - obs[:, 0:3]), axis=1) # abs angle
+        ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 15:18] - obs[:, 0:3]), axis=1)) # mse angle
 
-        # define direction cost (psi)
-        dir_abs_cost = tf.abs(obs[:, 5] - obs[:, 2]) # psi angle
-
-        # print
-        # zdist_abs_cost = tf.print(zdist_abs_cost, [zdist_abs_cost], message="zdist_abs_cost: ")
-        # ang_mse_cost = tf.print(ang_mse_cost, [ang_mse_cost], message="ang_mse_cost: ")
-
-        return w_dist*dist_mse_cost + w_ang*ang_mse_cost + w_dir*dir_abs_cost
+        return w_dist*dist_mse_cost + w_ang*ang_mse_cost
 
     @staticmethod
     def ac_cost_fn(acs):
