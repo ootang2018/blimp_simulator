@@ -19,18 +19,18 @@ class GazeboConnection():
         self.reset_simulation_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
         self.reset_world_proxy = rospy.ServiceProxy('/gazebo/reset_world', Empty)
 
-        # Setup the Gravity Controle system
+        # Setup the Gravity Control system
         service_name = '/gazebo/set_physics_properties'
-        rospy.logdebug("Waiting for service " + str(service_name))
-        rospy.wait_for_service(service_name)
-        rospy.logdebug("Service Found " + str(service_name))
+        # rospy.logdebug("Waiting for service " + str(service_name))
+        # rospy.wait_for_service(service_name)
+        # rospy.logdebug("Service Found " + str(service_name))
 
         self.set_physics = rospy.ServiceProxy(service_name, SetPhysicsProperties)
         self.start_init_physics_parameters = start_init_physics_parameters
         self.reset_world_or_sim = reset_world_or_sim
-        self.init_values()
+        # self.init_values()
         # We always pause the simulation, important for legged robots learning
-        self.pauseSim()
+        # self.pauseSim()
         rospy.loginfo("GazeboConnection Initialize Finished")
 
     def spawnModel(self):

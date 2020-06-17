@@ -6,10 +6,9 @@ from __future__ import absolute_import
 import time
 import rospy
 import sys
-import numpy as np
-import tf
 
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
+import numpy as np
+ 
 from dotmap import DotMap
 from math import pi
 
@@ -20,6 +19,7 @@ from geometry_msgs.msg import Twist, TwistStamped, Point, PointStamped
 from std_srvs.srv import Empty
 from visualization_msgs.msg import *
 
+from pets.misc.myTF import MyTF
 from pets.controller import MPC
 from gazeboConnection import GazeboConnection
 
@@ -52,8 +52,8 @@ class Agent:
     def _load(self):
         rospy.loginfo("[Agent Node] Load and Initialize Parameters...")
 
-        self.rate = rospy.Rate(2) # loop frequency
-        self.gravity = -9.8
+        self.RATE = rospy.Rate(2) # loop frequency
+        self.GRAVITY = -9.8
 
         # action noise
         noise_stddev = 0.1
@@ -170,10 +170,10 @@ class Agent:
 
         ax = msg.linear_acceleration.x
         ay = -1*msg.linear_acceleration.y
-        az = msg.linear_acceleration.z+self.gravity
+        az = msg.linear_acceleration.z+self.GRAVITY
 
         # from Quaternion to Euler Angle
-        euler = tf.transformations.euler_from_quaternion(quaternion)
+        euler = MyTF.euler_from_quaternion(quaternion)
 
         phi = euler[0]
         the = -1*euler[1]
@@ -252,7 +252,7 @@ class Agent:
         c = target_pose.orientation.z
         d = target_pose.orientation.w
         quaternion = (a,b,c,d)
-        euler = tf.transformations.euler_from_quaternion(quaternion)
+        euler = MyTF.euler_from_quaternion(quaternion)
         target_phi = 0
         target_the = 0
         # target_psi = 0
@@ -344,7 +344,7 @@ class Agent:
             rewards.append(reward)
             if done:
                 break
-            self.rate.sleep()
+            self.RATE.sleep()
 
         self.record = False
         print("Average action selection time: ", np.mean(times))
@@ -356,3 +356,16 @@ class Agent:
             "reward_sum": reward_sum,
             "rewards": np.array(rewards),
         }
+
+# if __name__ == "__main__":
+#     rospy.init_node('agent_node', anonymous=False)
+#     rospy.loginfo("Agent Node Initialising...")
+
+#     cfg = create_config('blimp', "MPC", [], [], '/home/yliu_local/blimpRL_ws/src/RL_log/pets_log')
+
+#     task_hor = 100
+#     policy = MPC(cfg.ctrl_cfg)
+
+#     # Agent()
+#     # Agent.sample(task_hor, policy)
+

@@ -1,15 +1,18 @@
+#!/usr/bin/env python
+
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
 import os
+import sys
+
 import importlib.machinery
 import importlib.util
 
 # import gpflow
 from dotmap import DotMap
 
-import sys
 
 from pets.modeling.models import NN, BNN
 from pets.config.blimp import BlimpConfigModule

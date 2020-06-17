@@ -7,7 +7,7 @@ import tensorflow.compat.v1 as tf
 tf.disable_eager_execution()
 
 from dotmap import DotMap
-import gym
+# import gym
 import sys
 
 from pets.misc.dotmapUtils import get_required_argument
