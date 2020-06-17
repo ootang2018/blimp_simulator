@@ -1,1 +1,2 @@
-# blimpRL
+Blimp Reinforcement Learning Agent
+===================================================

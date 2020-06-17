@@ -9,21 +9,7 @@ import pprint
 import sys
 import rospy
 
-pkg_path = '/home/yliu_local/RL_ws/src/mbrl_pets/script/pets'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/RL_ws/src/mbrl_pets/script/pets/config'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/RL_ws/src/mbrl_pets/script/pets/controller'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/RL_ws/src/mbrl_pets/script/pets/misc'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/RL_ws/src/mbrl_pets/script/pets/modeling'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/RL_ws/src/mbrl_pets/script/pets/modeling/layers'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/RL_ws/src/mbrl_pets/script/pets/modeling/models'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/RL_ws/src/mbrl_pets/script/pets/modeling/utils'
+pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script'
 sys.path.append(pkg_path)
 
 from dotmap import DotMap
@@ -33,11 +19,13 @@ from pets.controller import MPC
 from pets.config import create_config
 
 def main(env, ctrl_type, ctrl_args, overrides, logdir):
+    
     rospy.init_node('main_node', anonymous=False)
     rospy.loginfo("Main Node Initialising...")
+
     ctrl_args = DotMap(**{key: val for (key, val) in ctrl_args})
 
-    # model_dir = "/home/yliu_local/RL_ws/src/mbrl_pets/script/pets/log/2019-12-05--16:46:07"
+    # model_dir = "/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/log/2019-12-05--16:46:07"
     # overrides.append(["ctrl_cfg.prop_cfg.model_init_cfg.model_dir", model_dir])
     # overrides.append(["ctrl_cfg.prop_cfg.model_init_cfg.load_model", "True"])
     # overrides.append(["ctrl_cfg.prop_cfg.model_pretrained", "True"])
@@ -68,4 +56,4 @@ if __name__ == "__main__":
     #                     help='Directory to which results will be logged (default: ./log)')
     # args = parser.parse_args()
 
-    main('blimp', "MPC", [], [], '/home/yliu_local/RL_ws/RL_log/pets_log')
+    main('blimp', "MPC", [], [], '/home/yliu_local/blimpRL_ws/src/RL_log/pets_log')
