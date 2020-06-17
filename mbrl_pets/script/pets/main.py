@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
@@ -19,7 +19,7 @@ from pets.controller import MPC
 from pets.config import create_config
 
 def main(env, ctrl_type, ctrl_args, overrides, logdir):
-    
+
     rospy.init_node('main_node', anonymous=False)
     rospy.loginfo("Main Node Initialising...")
 
