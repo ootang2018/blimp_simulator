@@ -16,7 +16,7 @@ from pets.misc.agent import Agent
 
 class BlimpConfigModule:
     ENV_NAME = "blimp"
-    TASK_HORIZON = 100
+    TASK_HORIZON = 10
     NTRAIN_ITERS = 3000
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 7

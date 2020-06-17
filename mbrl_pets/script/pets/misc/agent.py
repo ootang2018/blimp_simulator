@@ -362,6 +362,11 @@ class Agent:
         for t in range(horizon):
             start = time.time()
             O_join = [*O[t],*O_target[t]]
+            print(O[t])
+            print(O_target[t])
+            print(O_join)
+            print("===============================")
+
             A.append(policy.act( O_join, t ))
             times.append(time.time() - start)
             # print(self.action)
@@ -387,6 +392,8 @@ class Agent:
         print("Average action selection time: ", np.mean(times))
         print("Rollout length: ", len(A))
 
+        print("O size",len(O))
+        print("O_target_size", len(O_target))
         return {
             "obs": np.array(O),
             "obs_target": np.array(O_target),
