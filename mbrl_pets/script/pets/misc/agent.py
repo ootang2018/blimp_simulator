@@ -94,16 +94,6 @@ class Agent:
         self.linear_acceleration = [0,0,0]
         self.reward = Float64()
 
-
-        # target flag
-        '''
-        0 = none
-        1 = teleokeyboard
-        2 = interactive_target
-        3 = moving_target
-        '''
-        self.target_flag = 0
-
         rospy.loginfo("[Agent Node] Load and Initialize Parameters Finished")
 
     def _create_pubs_subs(self):
@@ -265,14 +255,13 @@ class Agent:
         :param msg:
         :return:
         """
-        if (self.target_flag >= 2 or self.target_flag==0):
-            self.target_flag = 2
-            target_pose = msg.markers[0].pose
-            euler = self._euler_from_pose(target_pose)
-            target_phi, target_the, target_psi = 0, 0, euler[2]
-            self.target_angle = [target_phi, target_the, target_psi]
-            self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
-            # self.target_position = [0, 0, 7]
+
+        target_pose = msg.markers[0].pose
+        euler = self._euler_from_pose(target_pose)
+        target_phi, target_the, target_psi = 0, 0, euler[2]
+        self.target_angle = [target_phi, target_the, target_psi]
+        self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
+        # self.target_position = [0, 0, 7]
     
     def _moving_target_callback(self, msg):
         """
@@ -289,14 +278,13 @@ class Agent:
         :param msg:
         :return:
         """
-        if (self.target_flag >= 3 or self.target_flag==0):
-            self.target_flag = 3
-            target_pose = msg
-            euler = self._euler_from_pose(target_pose)
-            target_phi, target_the, target_psi = 0, 0, euler[2]
-            self.target_angle = [target_phi, target_the, target_psi]
-            self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
-            # self.target_position = [0, 0, 7]
+
+        target_pose = msg
+        euler = self._euler_from_pose(target_pose)
+        target_phi, target_the, target_psi = 0, 0, euler[2]
+        self.target_angle = [target_phi, target_the, target_psi]
+        self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
+        # self.target_position = [0, 0, 7]
 
     def _euler_from_pose(self, pose):
         a = pose.orientation.x
