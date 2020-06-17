@@ -9,7 +9,6 @@ import pprint
 import sys
 import rospy
 
-
 pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script'
 sys.path.append(pkg_path)
 pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets'
@@ -22,7 +21,6 @@ pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/misc'
 sys.path.append(pkg_path)
 pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/modeling'
 sys.path.append(pkg_path)
-print('main sys.version = '+ sys.version)
 
 from dotmap import DotMap
 
@@ -32,8 +30,8 @@ from pets.config import create_config
 
 def main(env, ctrl_type, ctrl_args, overrides, logdir):
 
-    rospy.init_node('main_node', anonymous=False)
-    rospy.loginfo("Main Node Initialising...")
+    rospy.init_node('pets_node', anonymous=False)
+    rospy.loginfo("[PETS Node] Initialising...")
 
     ctrl_args = DotMap(**{key: val for (key, val) in ctrl_args})
 

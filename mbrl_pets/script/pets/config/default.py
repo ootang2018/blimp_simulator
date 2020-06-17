@@ -13,7 +13,6 @@ import importlib.util
 # import gpflow
 from dotmap import DotMap
 
-
 from pets.modeling.models import NN, BNN
 from pets.config.blimp import BlimpConfigModule
 

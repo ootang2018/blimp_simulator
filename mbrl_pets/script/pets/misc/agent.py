@@ -8,7 +8,6 @@ import rospy
 import sys
 
 import numpy as np
- 
 from dotmap import DotMap
 from math import pi
 
@@ -19,8 +18,9 @@ from geometry_msgs.msg import Twist, TwistStamped, Point, PointStamped
 from std_srvs.srv import Empty
 from visualization_msgs.msg import *
 
+# mine
 from pets.misc.myTF import MyTF
-from pets.controller import MPC
+# from pets.controller import MPC
 from gazeboConnection import GazeboConnection
 
 
@@ -45,7 +45,7 @@ class Agent:
         self._create_pubs_subs()
 
         self.gaz = GazeboConnection(True, "WORLD")
-        self.gaz.unpauseSim()
+        # self.gaz.unpauseSim()
 
         rospy.loginfo("[Agent Node] Initialized")
 
@@ -63,7 +63,6 @@ class Agent:
         # m1 m2 m3 s ftop fbot fleft fright
         self.action_space = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         # self.ac_ub = np.array([70, 70, 50, pi/2, pi/36, pi/36, pi/36, pi/36])
-        # self.ac_lb = -self.ac_ub
         self.ac_ub = np.array([70, 70, 50, pi/2, 0, 0, 0, 0])
         self.ac_lb = -self.ac_ub
         self.dU = 8
@@ -162,7 +161,6 @@ class Agent:
         b = msg.orientation.y
         c = msg.orientation.z
         d = msg.orientation.w
-        quaternion = (a,b,c,d)
 
         p = msg.angular_velocity.x
         q = msg.angular_velocity.y
@@ -173,7 +171,7 @@ class Agent:
         az = msg.linear_acceleration.z+self.GRAVITY
 
         # from Quaternion to Euler Angle
-        euler = MyTF.euler_from_quaternion(quaternion)
+        euler = MyTF.euler_from_quaternion(a,b,c,d)
 
         phi = euler[0]
         the = -1*euler[1]
@@ -251,8 +249,7 @@ class Agent:
         b = target_pose.orientation.y
         c = target_pose.orientation.z
         d = target_pose.orientation.w
-        quaternion = (a,b,c,d)
-        euler = MyTF.euler_from_quaternion(quaternion)
+        euler = MyTF.euler_from_quaternion(a,b,c,d)
         target_phi = 0
         target_the = 0
         # target_psi = 0
