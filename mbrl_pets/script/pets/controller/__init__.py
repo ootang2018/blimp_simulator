@@ -1,1 +1,1 @@
-from .mpc import MPC
+from .MPC import MPC

@@ -9,20 +9,6 @@ import pprint
 import sys
 import rospy
 
-#TODO don't use direct path
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/config'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/controller'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/misc'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/modeling'
-sys.path.append(pkg_path)
-
 from dotmap import DotMap
 
 from pets import MBRLExperiment

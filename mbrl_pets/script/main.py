@@ -9,24 +9,10 @@ import pprint
 import sys
 import rospy
 
-#TODO don't use direct path
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/config'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/controller'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/misc'
-sys.path.append(pkg_path)
-pkg_path = '/home/yliu_local/blimpRL_ws/src/blimpRL/mbrl_pets/script/pets/modeling'
-sys.path.append(pkg_path)
-
 from dotmap import DotMap
 
-from pets import MBRLExperiment
-from pets.controller import MPC
+from pets.misc.MBExp import MBRLExperiment
+from pets.controller.MPC import MPC
 from pets.config import create_config
 
 def main(env, ctrl_type, ctrl_args, overrides, logdir):
@@ -35,7 +21,6 @@ def main(env, ctrl_type, ctrl_args, overrides, logdir):
     rospy.loginfo("[PETS Node] Initialising...")
 
     ctrl_args = DotMap(**{key: val for (key, val) in ctrl_args})
-
     cfg = create_config(env, ctrl_type, ctrl_args, overrides, logdir)
     cfg.pprint()
 
@@ -44,7 +29,8 @@ def main(env, ctrl_type, ctrl_args, overrides, logdir):
 
     exp = MBRLExperiment(cfg.exp_cfg)
 
-    os.makedirs(exp.logdir)
+    if not os.path.exists(exp.logdir):
+        os.makedirs(exp.logdir)
     with open(os.path.join(exp.logdir, "config.txt"), "w") as f:
         f.write(pprint.pformat(cfg.toDict()))
     exp.run_experiment()

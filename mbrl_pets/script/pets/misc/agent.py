@@ -20,7 +20,7 @@ from visualization_msgs.msg import *
 
 # mine
 from pets.misc.myTF import MyTF
-from gazeboConnection import GazeboConnection
+from .gazeboConnection import GazeboConnection
 
 
 class Agent:
