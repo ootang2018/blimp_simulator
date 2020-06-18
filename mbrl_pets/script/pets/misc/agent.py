@@ -255,8 +255,10 @@ class Agent:
         :param msg:
         :return:
         """
-
         target_pose = msg.markers[0].pose
+        print("Interactive Target Pose")
+        print(target_pose)
+        print("=============================")
         euler = self._euler_from_pose(target_pose)
         target_phi, target_the, target_psi = 0, 0, euler[2]
         self.target_angle = [target_phi, target_the, target_psi]
@@ -314,17 +316,21 @@ class Agent:
         return action
 
     def _get_obs(self):
+        angle_diff_0 = self.target_angle[0] - self.angle[0]; angle_diff_1 = self.target_angle[1] - self.angle[1]; angle_diff_2 = self.target_angle[2] - self.angle[2]
+        distance_diff_0 = self.target_position[0] - self.position[0]; distance_diff_1 = self.target_position[1] - self.position[1]; distance_diff_2 = self.target_position[2] - self.position[2]
+        relative_angle = [angle_diff_0, angle_diff_1, angle_diff_2]
+        relative_distance = [distance_diff_0, distance_diff_1, distance_diff_2]
 
         #extend state
         state = []
-        state.extend(self.angle)
+        state.extend(relative_angle)
         state.extend(self.angular_velocity)
-        state.extend(self.position)
+        state.extend(relative_distance)
         state.extend(self.velocity)
         state.extend(self.linear_acceleration)
 
-        state.extend(self.target_angle)
-        state.extend(self.target_position)
+        # state.extend(self.target_angle)
+        # state.extend(self.target_position)
 
         #extend reward
         if self.reward is None:

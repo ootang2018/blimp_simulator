@@ -17,10 +17,10 @@ from pets.misc.agent import Agent
 class BlimpConfigModule:
     ENV_NAME = "blimp"
     TASK_HORIZON = 60
-    NTRAIN_ITERS = 250
+    NTRAIN_ITERS = 500
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 10
-    MODEL_IN, MODEL_OUT = 29, 21
+    MODEL_IN, MODEL_OUT = 23, 15 ###
 
     def __init__(self):
         self.ENV = Agent()
@@ -80,29 +80,26 @@ class BlimpConfigModule:
 
         '''
         state
-        0:2 angle
+        0:2 relative_angle
         3:5 angular velocity
-        6:8 position
+        6:8 relative_position
         9:11 velocity
         12:14 acceleration
-
-        15:17 target angle
-        18:20 target_position
         '''
 
         # define distance cost
         # zdist_abs_cost = tf.abs(obs[:, 20] - obs[:, 8]) # z distance
         # dist_abs_cost = tf.reduce_sum(tf.abs(obs[:, 18:21] - obs[:, 6:9]), axis=1) # abs distance
-        dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 18:21] - obs[:, 6:9]), axis=1)) # mse distance
+        dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 6:9]), axis=1)) # mse distance
 
         # define angle cost (phi, the)
         # ang_abs_cost = tf.reduce_sum(tf.abs(obs[:, 15:18] - obs[:, 0:3]), axis=1) # abs angle
-        ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 15:16] - obs[:, 0:2]), axis=1)) # mse angle
+        ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 0:2]), axis=1)) # mse angle
 
         # define direction cost (psi)
-        dir_abs_cost = tf.abs(obs[:, 17] - obs[:, 0]) # psi angle
+        dir_abs_cost = tf.abs(obs[:, 2]) # psi angle
 
-        return w_dist*dist_mse_cost + w_ang*ang_mse_cost + w_dir*dir_abs_cost
+        return w_dist*dist_mse_cost + w_ang*ang_mse_cost + w_dir*dir_abs_cost ###
 
     @staticmethod
     def ac_cost_fn(acs):

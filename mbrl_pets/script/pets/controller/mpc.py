@@ -78,12 +78,12 @@ class MPC(Controller):
                         Warning: Can be very memory-intensive
         """
         super().__init__(params)
-        self.dO, self.dU = 21, 8 ###
+        self.dO, self.dU = 15, 8 ###
         self.ac_ub, self.ac_lb = params.env.ac_ub, params.env.ac_lb
         self.ac_ub = np.minimum(self.ac_ub, params.get("ac_ub", self.ac_ub))
         self.ac_lb = np.maximum(self.ac_lb, params.get("ac_lb", self.ac_lb))
         self.update_fns = params.get("update_fns", [])
-        self.per = params.get("per", 1) ###
+        self.per = params.get("per", 1) 
 
         self.model = get_required_argument(
             params.prop_cfg.model_init_cfg, "model_constructor", "Must provide a model constructor."
@@ -313,7 +313,7 @@ class MPC(Controller):
                 cond=continue_prediction, body=iteration, loop_vars=[t, init_costs, init_obs]
             )
 
-            # costs = tf.Print(costs, [costs], "costs: ") ###
+            # costs = tf.Print(costs, [costs], "costs: ") 
 
             # Replace nan costs with very high cost
             return tf.reduce_mean(tf.where(tf.is_nan(costs), 1e6 * tf.ones_like(costs), costs), axis=1)
