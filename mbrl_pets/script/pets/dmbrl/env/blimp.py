@@ -56,19 +56,16 @@ class BlimpEnv():
         # observation space
         '''
         state
-        0:2 angle
+        0:2 relative angle
         3:5 angular velocity
-        6:8 position
+        6:8 relative position
         9:11 velocity
         12:14 acceleration
-
-        15:17 target angle
-        18:20 target_position
         '''
-        self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        self.ob_ub = np.array([pi, pi, pi, pi, pi, pi, pi/2, pi/2, pi/2, 5, 5, 5, 5 ,5 ,5 , 2.5, 2.5, 2.5, 1.25, 1.25, 1.25])
+        self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        self.ob_ub = np.array([pi, pi, pi, pi, pi, pi, 10, 10, 10, 5, 5, 5, 3 ,3 ,3])
         self.ob_lb = -self.ob_ub
-        self.dO = 21
+        self.dO = 15
 
         # msgs initialize
         self.angle = [0,0,0]
@@ -287,6 +284,8 @@ class BlimpEnv():
         self.action = action
         act.data = action
         self.action_publisher.publish(act)
+
+        self.RATE.sleep()
 
         obs, reward, done = self._get_obs()
         return obs, reward, done, {}

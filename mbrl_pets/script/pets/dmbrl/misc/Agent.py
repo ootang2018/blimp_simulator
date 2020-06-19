@@ -82,8 +82,6 @@ class Agent:
             if done:
                 break
 
-            self.env.RATE.sleep()
-
         self.record = False
         print("Average action selection time: ", np.mean(times))
         print("Rollout length: ", len(A))

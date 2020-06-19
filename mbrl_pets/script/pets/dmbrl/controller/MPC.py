@@ -78,7 +78,10 @@ class MPC(Controller):
                         Warning: Can be very memory-intensive
         """
         super().__init__(params)
-        self.dO, self.dU = 15, 8 ###
+        self._params = params
+        # self.dO, self.dU = params.env.observation_space.shape[0], params.env.action_space.shape[0]
+        self.dO, self.dU = params.env.dO, params.env.dU 
+        # self.ac_ub, self.ac_lb = params.env.action_space.high, params.env.action_space.low
         self.ac_ub, self.ac_lb = params.env.ac_ub, params.env.ac_lb
         self.ac_ub = np.minimum(self.ac_ub, params.get("ac_ub", self.ac_ub))
         self.ac_lb = np.maximum(self.ac_lb, params.get("ac_lb", self.ac_lb))

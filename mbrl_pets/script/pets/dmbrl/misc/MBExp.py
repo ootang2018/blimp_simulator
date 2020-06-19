@@ -5,15 +5,13 @@ from __future__ import absolute_import
 import os
 from time import time, localtime, strftime
 
-import copy
-import numpy as np
-
 from scipy.io import savemat
 from dotmap import DotMap
 
 from dmbrl.misc.DotmapUtils import get_required_argument
 from dmbrl.misc.Agent import Agent
-
+import copy
+import numpy as np
 
 class MBRLExperiment:
     def __init__(self, params):
