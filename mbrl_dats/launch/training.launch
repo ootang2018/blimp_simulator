@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+
+<launch>	
+	<node name="main" pkg="mbrl_dats" type="mbexp.py" output="screen"/>
+</launch>

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<launch>
+	<!--<node name="agent" pkg="mbrl_dats" type="agent.py" output="screen"/>-->
+	<node name="render" pkg="mbrl_dats" type="render.py" output="screen"/>
+</launch>
