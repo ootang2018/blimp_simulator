@@ -19,7 +19,7 @@ class BlimpConfigModule:
     NTRAIN_ITERS = 500
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 10
-    MODEL_IN, MODEL_OUT = 23, 15 ###
+    MODEL_IN, MODEL_OUT = 23, 15 
 
     def __init__(self):
         from dmbrl.env.blimp import BlimpEnv
@@ -113,7 +113,7 @@ class BlimpConfigModule:
 
     def nn_constructor(self, model_init_cfg):
         model = get_required_argument(model_init_cfg, "model_class", "Must provide model class")(DotMap(
-            name="model", num_networks=5 , #get_required_argument(model_init_cfg, "num_nets", "Must provide ensemble size")
+            name="model", num_networks=get_required_argument(model_init_cfg, "num_nets", "Must provide ensemble size"),
             sess=self.SESS, load_model=model_init_cfg.get("load_model", False),
             model_dir=model_init_cfg.get("model_dir", None)
         ))

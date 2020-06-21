@@ -67,7 +67,7 @@ class FC:
         # Get raw layer outputs
         if len(input_tensor.shape) == 2:
             raw_output = tf.einsum("ij,ajk->aik", input_tensor, self.weights) + self.biases
-        elif len(input_tensor.shape) == 3 and input_tensor.shape[0] == self.ensemble_size: # input_tensor.shape[0].value
+        elif len(input_tensor.shape) == 3 and input_tensor.shape[0] == self.ensemble_size: ### input_tensor.shape[0].value
             raw_output = tf.matmul(input_tensor, self.weights) + self.biases
         else:
             raise ValueError("Invalid input dimension.")

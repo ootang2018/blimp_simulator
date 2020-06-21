@@ -20,6 +20,23 @@ from visualization_msgs.msg import *
 from dmbrl.env.myTF import MyTF
 from dmbrl.env.gazeboConnection import GazeboConnection
 
+class BlimpActionSpace():
+    def __init__(self):
+        # m1 m2 m3 s ftop fbot fleft fright
+        self.action_space = np.array([0, 0, 0, 0, 0, 0, 0, 0])
+        self.high = np.array([70, 70, 30, pi/2, pi/36, pi/36, pi/36, pi/36])
+        self.low = -self.high
+        self.shape = self.action_space.shape
+        self.dU = self.action_space.shape[0]
+
+
+class BlimpObservationSpace():
+    def __init__(self):
+        self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        self.high = np.array([pi, pi, pi, pi, pi, pi, 10, 10, 10, 5, 5, 5, 3 ,3 ,3])
+        self.low = -self.high
+        self.shape = self.observation_space.shape
+        self.dO = self.observation_space.shape[0]
 
 class BlimpEnv():
 
@@ -45,13 +62,9 @@ class BlimpEnv():
         self.noise_stddev = noise_stddev
 
         # action space
-        # m1 m2 m3 s ftop fbot fleft fright
-        self.action_space = np.array([0, 0, 0, 0, 0, 0, 0, 0])
-        self.ac_ub = np.array([70, 70, 30, pi/2, pi/36, pi/36, pi/36, pi/36])
-        # self.ac_ub = np.array([60, 60, 30, pi/2, 0, 0, 0, 0])
-        self.ac_lb = -self.ac_ub
-        self.dU = 8
-        self.action = (self.ac_ub + self.ac_lb)/2
+        self.action_space = BlimpActionSpace()
+        self.dU = self.action_space.dU
+        # self.action = (self.action_space.high + self.action_space.low)/2
 
         # observation space
         '''
@@ -62,10 +75,8 @@ class BlimpEnv():
         9:11 velocity
         12:14 acceleration
         '''
-        self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        self.ob_ub = np.array([pi, pi, pi, pi, pi, pi, 10, 10, 10, 5, 5, 5, 3 ,3 ,3])
-        self.ob_lb = -self.ob_ub
-        self.dO = 15
+        self.observation_space = BlimpObservationSpace()
+        self.dO = self.observation_space.dO
 
         # msgs initialize
         self.angle = [0,0,0]

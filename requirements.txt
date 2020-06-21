@@ -1,3 +1,5 @@
+rospkg 
+pyyaml
 dotmap==1.2.20
 future==0.16.0
 gpflow
