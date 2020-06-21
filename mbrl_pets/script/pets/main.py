@@ -37,11 +37,24 @@ def main(env, ctrl_type, ctrl_args, overrides, logdir):
 
 
 if __name__ == "__main__":
-
     env = 'blimp'
     ctrl_type = "MPC"
-    ctrl_args = []
-    overrides = []
+    ctrl_arg = []
+    override = []
     logdir = '/home/yliu_local/blimpRL_ws/src/RL_log/pets_log'
 
-    main(env, ctrl_type, ctrl_args, overrides, logdir)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-env', type=str, default=env,
+                        help='Environment name: select from [blimp, cartpole, reacher, pusher, halfcheetah]')
+    parser.add_argument('-ca', '--ctrl_arg', action='append', nargs=2, default=ctrl_arg,
+                        help='Controller arguments, see https://github.com/kchua/handful-of-trials#controller-arguments')
+    parser.add_argument('-o', '--override', action='append', nargs=2, default=override,
+                        help='Override default parameters, see https://github.com/kchua/handful-of-trials#overrides')
+    parser.add_argument('-logdir', type=str, default=logdir,
+                        help='Directory to which results will be logged (default: ./log)')
+    parser.add_argument('-e_popsize', type=int, default=500,
+                        help='different popsize to use')
+
+    args = parser.parse_args(sys.argv[4:]) ###
+
+    main(args.env, "MPC", args.ctrl_arg, args.override, args.logdir)
