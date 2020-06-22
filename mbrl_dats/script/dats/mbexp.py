@@ -18,9 +18,6 @@ from dmbrl.config import create_config
 from dmbrl.misc import logger
 
 def main(env, ctrl_type, ctrl_args, overrides, logdir, args):
-    rospy.init_node('dats_node', anonymous=False)
-    rospy.loginfo("[DATS Node] Initialising...")
-
     ctrl_args = DotMap(**{key: val for (key, val) in ctrl_args})
     cfg = create_config(env, ctrl_type, ctrl_args, overrides, logdir)
     logger.info('\n' + pprint.pformat(cfg))    
@@ -44,7 +41,7 @@ if __name__ == "__main__":
     env = "blimp"
     ctrl_arg = [("opt-type","CEM"),("model-type","PE"),("prop-type","E")]
     override = [("exp_cfg.sim_cfg.delay_hor" ,"5"),("ctrl_cfg.prop_cfg.delay_step", "5")]
-    logdir = "./log"
+    logdir = "~/log"
 
 
     parser = argparse.ArgumentParser()

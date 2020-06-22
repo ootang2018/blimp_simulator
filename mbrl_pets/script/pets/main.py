@@ -16,10 +16,6 @@ from dmbrl.controller.MPC import MPC
 from dmbrl.config import create_config
 
 def main(env, ctrl_type, ctrl_args, overrides, logdir):
-
-    rospy.init_node('pets_node', anonymous=False)
-    rospy.loginfo("[PETS Node] Initialising...")
-
     ctrl_args = DotMap(**{key: val for (key, val) in ctrl_args})
     cfg = create_config(env, ctrl_type, ctrl_args, overrides, logdir)
     cfg.pprint()
@@ -41,7 +37,7 @@ if __name__ == "__main__":
     ctrl_type = "MPC"
     ctrl_arg = []
     override = []
-    logdir = './log'
+    logdir = '~/log'
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-env', type=str, default=env,

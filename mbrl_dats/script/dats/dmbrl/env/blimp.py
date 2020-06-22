@@ -54,7 +54,8 @@ class BlimpObservationSpace():
 class BlimpEnv():
 
     def __init__(self):
-        rospy.loginfo("[Agent Node] Initialising...")
+        rospy.init_node('RL_node', anonymous=False)
+        rospy.loginfo("[RL Node] Initialising...")
 
         self._load()
         self._create_pubs_subs()
@@ -62,10 +63,10 @@ class BlimpEnv():
         self.gaz = GazeboConnection(True, "WORLD")
         # self.gaz.unpauseSim()
 
-        rospy.loginfo("[Agent Node] Initialized")
+        rospy.loginfo("[RL Node] Initialized")
 
     def _load(self):
-        rospy.loginfo("[Agent Node] Load and Initialize Parameters...")
+        rospy.loginfo("[RL Node] Load and Initialize Parameters...")
 
         self.RATE = rospy.Rate(2) # loop frequency
         self.GRAVITY = -9.8
@@ -92,10 +93,10 @@ class BlimpEnv():
         self.linear_acceleration = [0,0,0]
         self.reward = Float64()
 
-        rospy.loginfo("[Agent Node] Load and Initialize Parameters Finished")
+        rospy.loginfo("[RL Node] Load and Initialize Parameters Finished")
 
     def _create_pubs_subs(self):
-        rospy.loginfo("[Agent Node] Create Subscribers and Publishers...")
+        rospy.loginfo("[RL Node] Create Subscribers and Publishers...")
 
         """ create subscribers """
         rospy.Subscriber(
@@ -129,7 +130,7 @@ class BlimpEnv():
             Float64MultiArray,
             queue_size=1)
 
-        rospy.loginfo("[Agent Node] Subscribers and Publishers Created")
+        rospy.loginfo("[RL Node] Subscribers and Publishers Created")
 
     def _reward_callback(self,msg):
         """
