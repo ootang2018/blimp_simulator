@@ -123,7 +123,7 @@ class BlimpConfigModule:
 
     @staticmethod
     def ac_cost_fn(acs):
-        w_act = 0.1
+        w_act = 0.0
 
         # define action cost
         act_mse_cost = tf.reduce_sum(tf.square(acs), axis=1)
