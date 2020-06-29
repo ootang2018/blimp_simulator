@@ -13,7 +13,8 @@ from math import pi
 from std_msgs.msg import Float64, Float64MultiArray
 from sensor_msgs.msg import JointState, Imu
 from mav_msgs.msg import Actuators
-from geometry_msgs.msg import Twist, TwistStamped, Pose, Point, PointStamped
+from geometry_msgs.msg import Twist, TwistStamped, PoseArray, Pose, Point, PointStamped
+from nav_msgs.msg import Odometry
 from std_srvs.srv import Empty
 from visualization_msgs.msg import *
 
@@ -24,7 +25,7 @@ class BlimpActionSpace():
     def __init__(self):
         # m1 m2 m3 s ftop fbot fleft fright
         self.action_space = np.array([0, 0, 0, 0, 0, 0, 0, 0])
-        self.high = np.array([70, 70, 30, pi/2, pi/36, pi/36, pi/36, pi/36])
+        self.high = np.array([70, 70, 30, pi/2, pi/9, pi/9, pi/9, pi/9])
         self.low = -self.high
         self.shape = self.action_space.shape
         self.dU = self.action_space.shape[0]
@@ -89,6 +90,12 @@ class BlimpEnv():
         self.linear_acceleration = [0,0,0]
         self.reward = Float64()
 
+        # MPC
+        self.MPC_HORIZON = 15
+        self.SELECT_MPC_TARGET = 10
+        self.MPC_position_target = []
+        self.MPC_attitude_target = []
+
         rospy.loginfo("[RL Node] Load and Initialize Parameters Finished")
 
     def _create_pubs_subs(self):
@@ -119,12 +126,24 @@ class BlimpEnv():
             "/blimp/reward",
             Float64,
             self._reward_callback)
+        rospy.Subscriber(
+            "/machine_1/mpc_calculated/pose_traj",
+            PoseArray,
+            self._trajectory_callback)
 
         """ create publishers """
         self.action_publisher = rospy.Publisher(
             "/blimp/controller_cmd",
             Float64MultiArray,
             queue_size=1)
+        self.MPC_target_publisher = rospy.Publisher(
+            "/actorpose",
+            Odometry,
+            queue_size=1)
+        self.MPC_rviz_trajectory_publisher = rospy.Publisher(
+            "/blimp/MPC_rviz_trajectory",
+            PoseArray,
+            queue_size=60)
 
         rospy.loginfo("[RL Node] Subscribers and Publishers Created")
 
@@ -170,13 +189,14 @@ class BlimpEnv():
         c = msg.orientation.z
         d = msg.orientation.w
 
+        # NED Frame
         p = msg.angular_velocity.x
-        q = msg.angular_velocity.y
+        q = -1*msg.angular_velocity.y
         r = -1*msg.angular_velocity.z
 
-        ax = msg.linear_acceleration.x
-        ay = -1*msg.linear_acceleration.y
-        az = msg.linear_acceleration.z+self.GRAVITY
+        ax = -1*msg.linear_acceleration.x
+        ay = msg.linear_acceleration.y
+        az = -1*msg.linear_acceleration.z + self.GRAVITY
 
         # from Quaternion to Euler Angle
         euler = MyTF.euler_from_quaternion(a,b,c,d)
@@ -184,9 +204,10 @@ class BlimpEnv():
         phi = euler[0]
         the = -1*euler[1]
         psi = -1*euler[2]
-        self.angle = [phi,the,psi]
-        self.angular_velocity = [p,q,r]
-        self.linear_acceleration = [ax,ay,az]
+
+        self.angle = np.array((phi,the,psi))
+        self.angular_velocity = np.array((p,q,r))
+        self.linear_acceleration = np.array((ax,ay,az))
 
     def _gps_callback(self, msg):
         """
@@ -204,7 +225,13 @@ class BlimpEnv():
         :return:
         """
         location = msg
-        self.position = [location.point.x, location.point.y, location.point.z]
+
+        # NED Frame
+        location.point.y = location.point.y * -1
+        location.point.z = location.point.z * -1
+        self.position = np.array((location.point.x, location.point.y, location.point.z))
+
+        self.MPC_target_publish()
 
     def _velocity_callback(self, msg):
         """
@@ -223,7 +250,11 @@ class BlimpEnv():
             float64 z
         """
         velocity = msg
-        self.velocity = [velocity.twist.linear.x, velocity.twist.linear.y, velocity.twist.linear.z]
+
+        # NED Frame
+        velocity.twist.linear.y = velocity.twist.linear.y * -1
+        velocity.twist.linear.z = velocity.twist.linear.z * -1
+        self.velocity = np.array((velocity.twist.linear.x, velocity.twist.linear.y, velocity.twist.linear.z))
 
     def _interactive_target_callback(self, msg):
         """
@@ -251,14 +282,19 @@ class BlimpEnv():
         :return:
         """
         target_pose = msg.markers[0].pose
-        print("Interactive Target Pose")
-        print(target_pose)
-        print("=============================")
+        
+        # NED Frame
         euler = self._euler_from_pose(target_pose)
-        target_phi, target_the, target_psi = 0, 0, euler[2]
-        self.target_angle = [target_phi, target_the, target_psi]
-        self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
-        # self.target_position = [0, 0, 7]
+        target_phi, target_the, target_psi = 0, 0, -1*euler[2]
+        self.target_angle = np.array((target_phi, target_the, target_psi))
+        target_pose.position.y = target_pose.position.y*-1
+        target_pose.position.z = target_pose.position.z*-1
+        self.target_position = np.array((target_pose.position.x, target_pose.position.y, target_pose.position.z))
+
+        print("Interactive Target Pose")
+        print("=============================")
+        print("position = ",self.target_position)
+        print("angle = ",self.target_angle)
     
     def _moving_target_callback(self, msg):
         """
@@ -279,9 +315,160 @@ class BlimpEnv():
         target_pose = msg
         euler = self._euler_from_pose(target_pose)
         target_phi, target_the, target_psi = 0, 0, euler[2]
-        self.target_angle = [target_phi, target_the, target_psi]
-        self.target_position = [target_pose.position.x, target_pose.position.y, target_pose.position.z]
-        # self.target_position = [0, 0, 7]
+        self.target_angle = np.array((target_phi, target_the, target_psi))
+
+        # NED Frame
+        target_pose.position.y = target_pose.position.y*-1
+        target_pose.position.z = target_pose.position.z*-1
+        self.target_position = np.array((target_pose.position.x, target_pose.position.y, target_pose.position.z))
+
+    def _trajectory_callback(self, msg):
+        """
+        15 waypoint for the next 3 secs
+
+        geometry_msgs/Pose: 
+        geometry_msgs/Point position
+          float64 x
+          float64 y
+          float64 z
+        geometry_msgs/Quaternion orientation
+          float64 x
+          float64 y
+          float64 z
+          float64 w
+
+        :param msg:
+        :return:
+        """
+        data=[]
+        time_mult=1
+
+        position_trajectory = []
+        time_trajectory = []
+        yaw_trajectory = [] 
+        MPC_position_trajectory = []
+
+        MPC_rviz_trajectory = PoseArray()  
+        MPC_rviz_trajectory.header.frame_id="world"
+        MPC_rviz_trajectory.header.stamp=rospy.Time.now()
+        MPC_rviz_trajectory.poses=[]
+
+        current_time = time.time()
+        for i in range(self.MPC_HORIZON):
+            x = msg.poses[i].position.x
+            y = msg.poses[i].position.y
+            z = msg.poses[i].position.z
+            position_trajectory.append([y,-x,z])
+            time_trajectory.append(0.1*i*time_mult+current_time)
+            
+            temp_pose_msg = Pose()
+            temp_pose_msg.position.x = y 
+            temp_pose_msg.position.y = x 
+            temp_pose_msg.position.z = -z 
+            MPC_rviz_trajectory.poses.append(temp_pose_msg)
+
+        for i in range(0, self.MPC_HORIZON-1):
+            yaw_trajectory.append(np.arctan2(position_trajectory[i+1][1]-position_trajectory[i][1],position_trajectory[i+1][0]-position_trajectory[i][0]))
+        yaw_trajectory.append(yaw_trajectory[-1])
+
+        position_trajectory = np.array(position_trajectory)
+        time_trajectory = np.array(time_trajectory)
+        yaw_trajectory = np.array(yaw_trajectory)
+        self.MPC_rviz_trajectory_publisher.publish(MPC_rviz_trajectory)
+
+        (_,
+         _,
+         MPC_yaw_cmd) = self.trajectory_control(
+                 position_trajectory,
+                 yaw_trajectory,
+                 time_trajectory, time.time())
+        self.MPC_position_target = position_trajectory[self.SELECT_MPC_TARGET]
+        self.MPC_attitude_target = np.array((0.0, 0.0, MPC_yaw_cmd))
+
+    def MPC_target_publish(self):
+        """
+        std_msgs/Header header
+          uint32 seq
+          time stamp
+          string frame_id
+        string child_frame_id
+        geometry_msgs/PoseWithCovariance pose
+          geometry_msgs/Pose pose
+            geometry_msgs/Point position
+              float64 x
+              float64 y
+              float64 z
+            geometry_msgs/Quaternion orientation
+              float64 x
+              float64 y
+              float64 z
+              float64 w
+          float64[36] covariance
+        geometry_msgs/TwistWithCovariance twist
+          geometry_msgs/Twist twist
+            geometry_msgs/Vector3 linear
+              float64 x
+              float64 y
+              float64 z
+            geometry_msgs/Vector3 angular
+              float64 x
+              float64 y
+              float64 z
+          float64[36] covariance
+        """
+        target_pose = Odometry()
+        #NED
+        target_pose.header.frame_id="world"
+        target_pose.pose.pose.position.x = -self.target_position[1]; 
+        target_pose.pose.pose.position.y = self.target_position[0]; 
+        target_pose.pose.pose.position.z = self.target_position[2];
+        self.MPC_target_publisher.publish(target_pose)
+
+    def trajectory_control(self, position_trajectory, yaw_trajectory, time_trajectory, current_time):
+        """Generate a commanded position, velocity and yaw based on the trajectory
+
+        Args:
+            position_trajectory: list of 3-element numpy arrays, NED positions
+            yaw_trajectory: list yaw commands in radians
+            time_trajectory: list of times (in seconds) that correspond to the position and yaw commands
+            current_time: float corresponding to the current time in seconds
+
+        Returns: tuple (commanded position, commanded velocity, commanded yaw)
+
+        """
+
+        ind_min = np.argmin(np.abs(np.array(time_trajectory) - current_time))
+        time_ref = time_trajectory[ind_min]
+
+
+        if current_time < time_ref:
+            position0 = position_trajectory[ind_min - 1]
+            position1 = position_trajectory[ind_min]
+
+            time0 = time_trajectory[ind_min - 1]
+            time1 = time_trajectory[ind_min]
+            yaw_cmd = yaw_trajectory[ind_min - 1]
+
+        else:
+            yaw_cmd = yaw_trajectory[ind_min]
+            if ind_min >= len(position_trajectory) - 1:
+                position0 = position_trajectory[ind_min]
+                position1 = position_trajectory[ind_min]
+
+                time0 = 0.0
+                time1 = 1.0
+            else:
+
+                position0 = position_trajectory[ind_min]
+                position1 = position_trajectory[ind_min + 1]
+                time0 = time_trajectory[ind_min]
+                time1 = time_trajectory[ind_min + 1]
+
+        position_cmd = (position1 - position0) * \
+                        (current_time - time0) / (time1 - time0) + position0
+        velocity_cmd = (position1 - position0) / (time1 - time0)
+
+        return (position_cmd, velocity_cmd, yaw_cmd)
 
     def _euler_from_pose(self, pose):
         a = pose.orientation.x
@@ -313,10 +500,10 @@ class BlimpEnv():
         return action
 
     def _get_obs(self):
-        angle_diff_0 = self.target_angle[0] - self.angle[0]; angle_diff_1 = self.target_angle[1] - self.angle[1]; angle_diff_2 = self.target_angle[2] - self.angle[2]
-        distance_diff_0 = self.target_position[0] - self.position[0]; distance_diff_1 = self.target_position[1] - self.position[1]; distance_diff_2 = self.target_position[2] - self.position[2]
-        relative_angle = [angle_diff_0, angle_diff_1, angle_diff_2]
-        relative_distance = [distance_diff_0, distance_diff_1, distance_diff_2]
+        # relative_angle = self.target_angle - self.angle 
+        # relative_distance = self.target_position - self.position;
+        relative_angle = self.MPC_attitude_target - self.angle
+        relative_distance = self.MPC_position_target - self.position
 
         #extend state
         state = []

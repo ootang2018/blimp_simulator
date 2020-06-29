@@ -41,7 +41,7 @@ if __name__ == "__main__":
     env = "blimp"
     ctrl_arg = [("opt-type","CEM"),("model-type","PE"),("prop-type","E")]
     override = [("exp_cfg.sim_cfg.delay_hor" ,"5"),("ctrl_cfg.prop_cfg.delay_step", "5")]
-    logdir = "~/log"
+    logdir = "/home/yliu_local/blimpRL_ws/src/RL_log/dats_log"
 
 
     parser = argparse.ArgumentParser()
