@@ -46,7 +46,9 @@ class BlimpEnv():
         rospy.loginfo("[RL Node] Initialising...")
 
         self._load()
+        self.pub_and_sub = False
         self._create_pubs_subs()
+        self.pub_and_sub = True
 
         self.gaz = GazeboConnection(True, "WORLD")
         # self.gaz.unpauseSim()
@@ -231,7 +233,8 @@ class BlimpEnv():
         location.point.z = location.point.z * -1
         self.position = np.array((location.point.x, location.point.y, location.point.z))
 
-        self.MPC_target_publish()
+        if (self.pub_and_sub):
+            self.MPC_target_publish()
 
     def _velocity_callback(self, msg):
         """

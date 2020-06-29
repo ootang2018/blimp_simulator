@@ -74,9 +74,9 @@ class BlimpConfigModule:
     """
     @staticmethod
     def obs_cost_fn(obs):
-        w_dist = 0.5
+        w_dist = 1
         w_ang = 0.1
-        w_dir = 0.4
+        w_dir = 0.1
 
         '''
         state
@@ -103,7 +103,7 @@ class BlimpConfigModule:
 
     @staticmethod
     def ac_cost_fn(acs):
-        w_act = 0.1
+        w_act = 0.0
 
         # define action cost
         act_mse_cost = tf.reduce_sum(tf.square(acs), axis=1)
@@ -118,10 +118,9 @@ class BlimpConfigModule:
             model_dir=model_init_cfg.get("model_dir", None)
         ))
         if not model_init_cfg.get("load_model", False):
-            model.add(FC(100, input_dim=self.MODEL_IN, activation="swish", weight_decay=0.000025))
-            model.add(FC(100, activation="swish", weight_decay=0.00005))
-            model.add(FC(100, activation="swish", weight_decay=0.000075))
-            model.add(FC(100, activation="swish", weight_decay=0.000075))
+            model.add(FC(70, input_dim=self.MODEL_IN, activation="swish", weight_decay=0.000025))
+            model.add(FC(70, activation="swish", weight_decay=0.00005))
+            model.add(FC(70, activation="swish", weight_decay=0.000075))
             model.add(FC(self.MODEL_OUT, weight_decay=0.0001))
         model.finalize(tf.train.AdamOptimizer, {"learning_rate": 0.001})
         return model
