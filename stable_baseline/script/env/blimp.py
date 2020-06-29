@@ -32,13 +32,6 @@ class BlimpActionSpace():
         self.shape = self.action_space.shape
         self.dU = self.action_space.shape[0]
 
-    def sample(self):
-        uni_rand = np.random.uniform(-1, 1, size=self.shape)
-        action = self.high * uni_rand
-
-        return action
-
-
 class BlimpObservationSpace():
     def __init__(self):
         self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
@@ -48,9 +41,6 @@ class BlimpObservationSpace():
         self.dO = self.observation_space.shape[0]
 
 class BlimpEnv(gym.Env):
-    metadata = {'render.modes': ['console']}
-    LEFT = 0
-    RIGHT = 1
 
     def __init__(self):
         super(BlimpEnv, self).__init__()
@@ -78,9 +68,7 @@ class BlimpEnv(gym.Env):
         # action space
         act_space = BlimpActionSpace()
         self.action_space = spaces.Box(low=act_space.low, high=act_space.high,
-                                        shape=act_space.low.shape, dtype=np.float32)
-        # self.action_space = BlimpActionSpace()
-        # self.dU = self.action_space.dU
+                                        shape=act_space.shape, dtype=np.float32)
 
         # observation space
         '''
@@ -93,9 +81,7 @@ class BlimpEnv(gym.Env):
         '''
         obs_space = BlimpObservationSpace()
         self.observation_space = spaces.Box(low=obs_space.low, high=obs_space.high,
-                                 shape=obs_space.low.shape, dtype=np.float32)
-        # self.observation_space = BlimpObservationSpace()
-        # self.dO = self.observation_space.dO
+                                            shape=obs_space.shape, dtype=np.float32)   
 
         # msgs initialize
         self.angle = np.array((0,0,0))
@@ -118,8 +104,6 @@ class BlimpEnv(gym.Env):
         self.pub_and_sub = False
 
     def _create_pubs_subs(self):
-
-
         rospy.loginfo("[RL Node] Create Subscribers and Publishers...")
 
         """ create subscribers """
@@ -504,7 +488,6 @@ class BlimpEnv(gym.Env):
     def step(self,action):
         act = Float64MultiArray()
         self.action = action
-        print("action=", action)
         act.data = action
         self.action_publisher.publish(act)
 
@@ -549,5 +532,4 @@ class BlimpEnv(gym.Env):
         #done is not used for now
         done = False
 
-
-        return np.array([state]).astype(np.float32), reward, done
+        return np.array(state).astype(np.float32), reward, done
