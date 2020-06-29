@@ -13,7 +13,7 @@ from dmbrl.modeling.layers import FC
 
 class BlimpConfigModule:
     ENV_NAME = "blimp"
-    TASK_HORIZON = 20 #60
+    TASK_HORIZON = 60 #60
     NTRAIN_ITERS = 500
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 10
@@ -94,9 +94,9 @@ class BlimpConfigModule:
     """
     @staticmethod
     def obs_cost_fn(obs):
-        w_dist = 0.5
+        w_dist = 1
         w_ang = 0.1
-        w_dir = 0.4
+        w_dir = 0.1
 
         '''
         state
@@ -138,10 +138,9 @@ class BlimpConfigModule:
             model_dir=model_init_cfg.get("model_dir", None)
         ))
         if not model_init_cfg.get("load_model", False):
-            model.add(FC(100, input_dim=self.MODEL_IN, activation="swish", weight_decay=0.000025))
-            model.add(FC(100, activation="swish", weight_decay=0.00005))
-            model.add(FC(100, activation="swish", weight_decay=0.000075))
-            model.add(FC(100, activation="swish", weight_decay=0.000075))
+            model.add(FC(75, input_dim=self.MODEL_IN, activation="swish", weight_decay=0.000025))
+            model.add(FC(75, activation="swish", weight_decay=0.00005))
+            model.add(FC(75, activation="swish", weight_decay=0.000075))
             model.add(FC(self.MODEL_OUT, weight_decay=0.0001))
         model.finalize(tf.train.AdamOptimizer, {"learning_rate": 0.001})
         return model
