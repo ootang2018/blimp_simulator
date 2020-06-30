@@ -1,6 +1,6 @@
 from stable_baselines.sac.policies import MlpPolicy
 from stable_baselines import SAC
-
+from env.blimp import BlimpEnv
 
 model_path = '/home/yliu_local/blimpRL_ws/src/RL_log/sac_log/2020-06-30--20:35:30/final_model.zip'
 
