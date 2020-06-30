@@ -25,7 +25,16 @@ from .gazeboConnection import GazeboConnection
 
 class BlimpActionSpace():
     def __init__(self):
-        # m1 m2 m3 s ftop fbot fleft fright
+        '''
+        0: left motor 
+        1: right motor
+        2: back motor
+        3: servo
+        4: top fin
+        5: bottom fin 
+        6: left fin
+        7: right fin
+        '''
         self.action_space = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         self.high = np.array([70, 70, 30, pi/2, pi/9, pi/9, pi/9, pi/9])
         self.low = -self.high
@@ -34,8 +43,16 @@ class BlimpActionSpace():
 
 class BlimpObservationSpace():
     def __init__(self):
+        '''
+        state
+        0:2 relative angle
+        3:5 angular velocity
+        6:8 relative position
+        9:11 velocity
+        12:14 acceleration
+        '''
         self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        self.high = np.array([pi, pi, pi, pi, pi, pi, 10, 10, 10, 5, 5, 5, 3 ,3 ,3])
+        self.high = np.array([pi, pi, pi, pi/2, pi/2, pi/2, 10, 10, 10, 5, 5, 5, 2 ,2 ,2])
         self.low = -self.high
         self.shape = self.observation_space.shape
         self.dO = self.observation_space.shape[0]
@@ -59,7 +76,7 @@ class BlimpEnv(gym.Env):
         rospy.loginfo("[RL Node] Load and Initialize Parameters...")
 
         self.RATE = rospy.Rate(SLEEP_RATE) # loop frequency
-        self.GRAVITY = -9.81
+        self.GRAVITY = 9.81
 
         # action noise
         noise_stddev = 0.1
@@ -67,22 +84,16 @@ class BlimpEnv(gym.Env):
 
         # action space
         act_space = BlimpActionSpace()
-        self.high = act_space.high
+        self.act_high = act_space.high
         self.action_space = spaces.Box(low=-1, high=1,
                                         shape=act_space.shape, dtype=np.float32)
 
         # observation space
-        '''
-        state
-        0:2 relative angle
-        3:5 angular velocity
-        6:8 relative position
-        9:11 velocity
-        12:14 acceleration
-        '''
         obs_space = BlimpObservationSpace()
-        self.observation_space = spaces.Box(low=obs_space.low, high=obs_space.high,
-                                            shape=obs_space.shape, dtype=np.float32)   
+        self.obs_high = obs_space.high
+
+        self.observation_space = spaces.Box(low=-1, high=1,
+                                            shape=obs_space.shape, dtype=np.float32)
 
         # msgs initialize
         self.angle = np.array((0,0,0))
@@ -95,14 +106,20 @@ class BlimpEnv(gym.Env):
         self.reward = Float64()
 
         # MPC
+        self.use_MPC = True
         self.MPC_HORIZON = 15
-        self.SELECT_MPC_TARGET = 10
+        self.SELECT_MPC_TARGET = 7
         self.MPC_position_target = np.array((0,0,0))
         self.MPC_attitude_target = np.array((0,0,0))
 
+        # misc
+        self.env_reset_mse_threshold = 1700
+        self.cnt=0
+        self.pub_and_sub = False
+
         rospy.loginfo("[RL Node] Load and Initialize Parameters Finished")
 
-        self.pub_and_sub = False
+        
 
     def _create_pubs_subs(self):
         rospy.loginfo("[RL Node] Create Subscribers and Publishers...")
@@ -203,7 +220,7 @@ class BlimpEnv(gym.Env):
 
         ax = -1*msg.linear_acceleration.x
         ay = msg.linear_acceleration.y
-        az = -1*msg.linear_acceleration.z + self.GRAVITY
+        az = msg.linear_acceleration.z - self.GRAVITY
 
         # from Quaternion to Euler Angle
         euler = MyTF.euler_from_quaternion(a,b,c,d)
@@ -487,7 +504,7 @@ class BlimpEnv(gym.Env):
         return euler     
           
     def step(self,action):
-        action = self.high * action
+        action = self.act_high * action
         act = Float64MultiArray()
         self.action = action
         act.data = action
@@ -507,11 +524,13 @@ class BlimpEnv(gym.Env):
         return action
 
     def _get_obs(self):
-        relative_angle = self.target_angle - self.angle 
-        relative_distance = self.target_position - self.position
-        # relative_angle = self.MPC_attitude_target - self.angle
-        # relative_distance = self.MPC_position_target - self.position
-
+        if (self.use_MPC):
+            relative_angle = self.MPC_attitude_target - self.angle
+            relative_distance = self.MPC_position_target - self.position
+        else:
+            relative_angle = self.target_angle - self.angle 
+            relative_distance = self.target_position - self.position
+        
         #extend state
         state = []
         state.extend(relative_angle)
@@ -519,17 +538,19 @@ class BlimpEnv(gym.Env):
         state.extend(relative_distance)
         state.extend(self.velocity)
         state.extend(self.linear_acceleration)
+        state = np.array(state)
+        state = state / self.obs_high #normalize
 
-        # state.extend(self.target_angle)
-        # state.extend(self.target_position)
-        
         #extend reward
         if self.reward is None:
             reward = -1
         else:
             reward = self.reward.data
 
-        #done is not used for now
+        #done is used to reset environment if distance to target is too far
         done = False
+        mse_dist = (relative_distance**2).mean()
+        if (mse_dist >= self.env_reset_mse_threshold):
+            done = True
 
-        return np.array(state).astype(np.float32), reward, done
+        return state, reward, done
