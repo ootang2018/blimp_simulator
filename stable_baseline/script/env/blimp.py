@@ -59,23 +59,25 @@ class BlimpObservationSpace():
 
 class BlimpEnv(gym.Env):
 
-    def __init__(self, SLEEP_RATE= 2):
+    def __init__(self, SLEEP_RATE = 2, EPISODE_LENGTH = 6000):
         super(BlimpEnv, self).__init__()
 
         rospy.init_node('RL_node', anonymous=False)
         rospy.loginfo("[RL Node] Initialising...")
 
-        self._load(SLEEP_RATE)
+        self.RATE = rospy.Rate(SLEEP_RATE) # loop frequency
+        self.EPISODE_LENGTH = EPISODE_LENGTH
+
+        self._load()
         self._create_pubs_subs()
 
         self.gaz = GazeboConnection(True, "WORLD")
 
         rospy.loginfo("[RL Node] Initialized")
 
-    def _load(self, SLEEP_RATE):
+    def _load(self):
         rospy.loginfo("[RL Node] Load and Initialize Parameters...")
 
-        self.RATE = rospy.Rate(SLEEP_RATE) # loop frequency
         self.GRAVITY = 9.81
 
         # action noise
@@ -115,6 +117,7 @@ class BlimpEnv(gym.Env):
         # misc
         self.env_reset_mse_threshold = 1700
         self.cnt=0
+        self.timestep=1
         self.pub_and_sub = False
 
         rospy.loginfo("[RL Node] Load and Initialize Parameters Finished")
@@ -504,6 +507,7 @@ class BlimpEnv(gym.Env):
         return euler     
           
     def step(self,action):
+        self.timestep += 1
         action = self.act_high * action
         act = Float64MultiArray()
         self.action = action
@@ -515,6 +519,7 @@ class BlimpEnv(gym.Env):
 
     def reset(self):
         self.gaz.resetSim()
+        self.timestep = 1
         obs, reward, done = self._get_obs()
         return obs
 
@@ -547,10 +552,9 @@ class BlimpEnv(gym.Env):
         else:
             reward = self.reward.data
 
-        #done is used to reset environment if distance to target is too far
+        #done is used to reset environment when episode finished
         done = False
-        mse_dist = (relative_distance**2).mean()
-        if (mse_dist >= self.env_reset_mse_threshold):
+        if (self.timestep%(self.EPISODE_LENGTH+1)==0):
             done = True
 
         return state, reward, done

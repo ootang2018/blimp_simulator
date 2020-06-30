@@ -35,11 +35,6 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
         self.save_path = os.path.join(log_dir, 'best_model')
         self.best_mean_reward = -np.inf
 
-    # def _init_callback(self) -> None:
-    #     # Create folder if needed
-    #     if self.save_path is not None:
-    #         os.makedirs(self.save_path, exist_ok=True)
-
     def _on_step(self) -> bool:
         if self.n_calls % self.check_freq == 0:
 
@@ -76,10 +71,10 @@ def main(logdir):
 	os.makedirs(logdir)	
 	checkpoint_path = os.path.join(logdir,'checkpoint')
 	callback_path = logdir
-	final_model_path = logdir+'final_model'
+	final_model_path = logdir+'/final_model'
 
 	# env
-	env = BlimpEnv(SLEEP_RATE)
+	env = BlimpEnv(SLEEP_RATE, EPISODE_LENGTH)
 	env = Monitor(env, logdir)
 	# env = make_vec_env(lambda: env, n_envs=1, monitor_dir=logdir)
 	print("Observation space:", env.observation_space)
@@ -100,7 +95,7 @@ def main(logdir):
 
 	# agent
 	model = SAC(MlpPolicy, env, gamma=0.98, 
-		learning_rate=0.0003, buffer_size=1000000, learning_starts=10000, 
+		learning_rate=0.0003, buffer_size=1000000, learning_starts=EPISODE_LENGTH*5, 
 		train_freq=1, batch_size=256, tau=0.01, ent_coef='auto', 
 		target_update_interval=1, gradient_steps=1, target_entropy='auto', 
 		action_noise=None, verbose=1, tensorboard_log=logdir, 
@@ -116,26 +111,11 @@ def main(logdir):
 	del model # remove to demonstrate saving and loading
 	model = SAC.load(final_model_path)
 
-	obs = env.reset()
-	reward_sum = 0.0
-	for i in range(EPISODE_LENGTH):
-	    action, _states = model.predict(obs)
-	    obs, rewards, dones, info = env.step(action)
-	    reward_sum += rewards
-
-	print("reward_sum=",reward_sum/SLEEP_RATE)
-
 	results_plotter.plot_results([logdir], TOTAL_TIMESTEPS, results_plotter.X_TIMESTEPS, "SAC BLIMP")
 	plt.show()
 
 if __name__ == "__main__":
 
 	logdir = '/home/yliu_local/blimpRL_ws/src/RL_log/sac_log'
-
-	# parser = argparse.ArgumentParser()
- #    parser.add_argument('-ca', '--ctrl_arg', action='append', nargs=2, default=[])
-	# parser.add_argument('-o', '--override', action='append', nargs=2, default=[])
- #    parser.add_argument('-logdir', type=str, default=logdir)
- #    args = parser.parse_args()
 	
 	main(logdir)
