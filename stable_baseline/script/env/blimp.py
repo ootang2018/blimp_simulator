@@ -42,23 +42,23 @@ class BlimpObservationSpace():
 
 class BlimpEnv(gym.Env):
 
-    def __init__(self):
+    def __init__(self, SLEEP_RATE= 2):
         super(BlimpEnv, self).__init__()
 
         rospy.init_node('RL_node', anonymous=False)
         rospy.loginfo("[RL Node] Initialising...")
 
-        self._load()
+        self._load(SLEEP_RATE)
         self._create_pubs_subs()
 
         self.gaz = GazeboConnection(True, "WORLD")
 
         rospy.loginfo("[RL Node] Initialized")
 
-    def _load(self):
+    def _load(self, SLEEP_RATE):
         rospy.loginfo("[RL Node] Load and Initialize Parameters...")
 
-        self.RATE = rospy.Rate(2) # loop frequency
+        self.RATE = rospy.Rate(SLEEP_RATE) # loop frequency
         self.GRAVITY = -9.81
 
         # action noise
@@ -67,7 +67,8 @@ class BlimpEnv(gym.Env):
 
         # action space
         act_space = BlimpActionSpace()
-        self.action_space = spaces.Box(low=act_space.low, high=act_space.high,
+        self.high = act_space.high
+        self.action_space = spaces.Box(low=-1, high=1,
                                         shape=act_space.shape, dtype=np.float32)
 
         # observation space
@@ -486,13 +487,12 @@ class BlimpEnv(gym.Env):
         return euler     
           
     def step(self,action):
+        action = self.high * action
         act = Float64MultiArray()
         self.action = action
         act.data = action
         self.action_publisher.publish(act)
-
         self.RATE.sleep()
-
         obs, reward, done = self._get_obs()
         return obs, reward, done, {}
 
