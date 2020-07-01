@@ -61,8 +61,7 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
 def main(logdir):
 	# params
 	SLEEP_RATE = 100
-
-	N_EPISODE = 5 
+	N_EPISODE = 1000 
 	EPISODE_LENGTH = SLEEP_RATE*60 #60 sec
 	TOTAL_TIMESTEPS = EPISODE_LENGTH * N_EPISODE
 
