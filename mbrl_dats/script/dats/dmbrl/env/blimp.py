@@ -57,7 +57,7 @@ class BlimpObservationSpace():
 
 class BlimpEnv(gym.Env):
 
-    def __init__(self, SLEEP_RATE = 2, USE_MPC=True):
+    def __init__(self, SLEEP_RATE = 10, USE_MPC=True):
         super(BlimpEnv, self).__init__()
 
         rospy.init_node('RL_node', anonymous=False)
@@ -117,8 +117,6 @@ class BlimpEnv(gym.Env):
         self.pub_and_sub = False
 
         rospy.loginfo("[RL Node] Load and Initialize Parameters Finished")
-
-        
 
     def _create_pubs_subs(self):
         rospy.loginfo("[RL Node] Create Subscribers and Publishers...")
@@ -505,10 +503,12 @@ class BlimpEnv(gym.Env):
     def step(self,action):
         self.timestep += 1
         action = self.act_bnd * action
+
         act = Float64MultiArray()
         self.action = action
         act.data = action
         self.action_publisher.publish(act)
+
         self.RATE.sleep()
         obs, reward, done = self._get_obs()
         return obs, reward, done, {}

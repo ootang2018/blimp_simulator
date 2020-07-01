@@ -15,8 +15,9 @@ from dmbrl.modeling.layers import FC
 
 class BlimpConfigModule:
     ENV_NAME = "blimp"
-    TASK_HORIZON = 60 #60
-    NTRAIN_ITERS = 500
+    SLEEP_RATE = 10
+    TASK_HORIZON = 30 * SLEEP_RATE # 30sec
+    NTRAIN_ITERS = 4*60 # 4hr
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 5 # 5 7 10 13 15
     MODEL_IN, MODEL_OUT = 23, 15 
