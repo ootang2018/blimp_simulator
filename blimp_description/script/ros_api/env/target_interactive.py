@@ -191,6 +191,6 @@ if __name__=="__main__":
 
         rospy.Timer(rospy.Duration(0.01), frameCallback)
 
-        time.sleep(60)
+        time.sleep(120)
 
     rospy.spin()
