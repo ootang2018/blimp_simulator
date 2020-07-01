@@ -18,7 +18,7 @@ class BlimpConfigModule:
     TASK_HORIZON = 60
     NTRAIN_ITERS = 500
     NROLLOUTS_PER_ITER = 1
-    PLAN_HOR = 10
+    PLAN_HOR = 15
     MODEL_IN, MODEL_OUT = 23, 15 
 
     def __init__(self):
@@ -74,7 +74,7 @@ class BlimpConfigModule:
     """
     @staticmethod
     def obs_cost_fn(obs):
-        w_dist = 1
+        w_dist = 0.8
         w_ang = 0.1
         w_dir = 0.1
 
@@ -88,12 +88,9 @@ class BlimpConfigModule:
         '''
 
         # define distance cost
-        # zdist_abs_cost = tf.abs(obs[:, 20] - obs[:, 8]) # z distance
-        # dist_abs_cost = tf.reduce_sum(tf.abs(obs[:, 18:21] - obs[:, 6:9]), axis=1) # abs distance
         dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 6:9]), axis=1)) # mse distance
 
         # define angle cost (phi, the)
-        # ang_abs_cost = tf.reduce_sum(tf.abs(obs[:, 15:18] - obs[:, 0:3]), axis=1) # abs angle
         ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 0:2]), axis=1)) # mse angle
 
         # define direction cost (psi)
@@ -107,7 +104,6 @@ class BlimpConfigModule:
 
         # define action cost
         act_mse_cost = tf.reduce_sum(tf.square(acs), axis=1)
-        # act_mse_cost = tf.print(act_mse_cost, [act_mse_cost], message="act_mse_cost: ")
 
         return w_act*act_mse_cost
 
@@ -118,9 +114,9 @@ class BlimpConfigModule:
             model_dir=model_init_cfg.get("model_dir", None)
         ))
         if not model_init_cfg.get("load_model", False):
-            model.add(FC(70, input_dim=self.MODEL_IN, activation="swish", weight_decay=0.000025))
-            model.add(FC(70, activation="swish", weight_decay=0.00005))
-            model.add(FC(70, activation="swish", weight_decay=0.000075))
+            model.add(FC(75, input_dim=self.MODEL_IN, activation="swish", weight_decay=0.000025))
+            model.add(FC(75, activation="swish", weight_decay=0.00005))
+            model.add(FC(75, activation="swish", weight_decay=0.000075))
             model.add(FC(self.MODEL_OUT, weight_decay=0.0001))
         model.finalize(tf.train.AdamOptimizer, {"learning_rate": 0.001})
         return model

@@ -60,9 +60,9 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
 
 def main(logdir):
 	# params
-	SLEEP_RATE = 100
-	N_EPISODE = 1000 
-	EPISODE_LENGTH = SLEEP_RATE*60 #60 sec
+	SLEEP_RATE = 100 #100Hz  
+	N_EPISODE = 10000 
+	EPISODE_LENGTH = SLEEP_RATE*30 #30 sec
 	TOTAL_TIMESTEPS = EPISODE_LENGTH * N_EPISODE
 
 	# logdir
@@ -73,7 +73,7 @@ def main(logdir):
 	final_model_path = logdir+'/final_model'
 
 	# env
-	env = BlimpEnv(SLEEP_RATE, EPISODE_LENGTH)
+	env = BlimpEnv(SLEEP_RATE)
 	env = Monitor(env, logdir)
 	# env = make_vec_env(lambda: env, n_envs=1, monitor_dir=logdir)
 	print("Observation space:", env.observation_space)

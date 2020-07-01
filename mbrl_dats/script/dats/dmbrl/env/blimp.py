@@ -7,7 +7,9 @@ import rospy
 import sys
 
 import numpy as np
-from dotmap import DotMap
+import gym
+from gym import spaces
+
 from math import pi
 
 from std_msgs.msg import Float64, Float64MultiArray
@@ -18,59 +20,29 @@ from nav_msgs.msg import Odometry
 from std_srvs.srv import Empty
 from visualization_msgs.msg import *
 
-from dmbrl.env.myTF import MyTF
-from dmbrl.env.gazeboConnection import GazeboConnection
+from .myTF import MyTF
+from .gazeboConnection import GazeboConnection
 
 class BlimpActionSpace():
     def __init__(self):
-        # m1 m2 m3 s ftop fbot fleft fright
+        '''
+        0: left motor 
+        1: right motor
+        2: back motor
+        3: servo
+        4: top fin
+        5: bottom fin 
+        6: left fin
+        7: right fin
+        '''
         self.action_space = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         self.high = np.array([70, 70, 30, pi/2, pi/9, pi/9, pi/9, pi/9])
         self.low = -self.high
         self.shape = self.action_space.shape
         self.dU = self.action_space.shape[0]
 
-
 class BlimpObservationSpace():
     def __init__(self):
-        self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        self.high = np.array([pi, pi, pi, pi, pi, pi, 10, 10, 10, 5, 5, 5, 3 ,3 ,3])
-        self.low = -self.high
-        self.shape = self.observation_space.shape
-        self.dO = self.observation_space.shape[0]
-
-class BlimpEnv():
-
-    def __init__(self):
-        rospy.init_node('RL_node', anonymous=False)
-        rospy.loginfo("[RL Node] Initialising...")
-
-        self._load()
-        self.pub_and_sub = False
-        self._create_pubs_subs()
-        self.pub_and_sub = True
-
-        self.gaz = GazeboConnection(True, "WORLD")
-        # self.gaz.unpauseSim()
-
-        rospy.loginfo("[RL Node] Initialized")
-
-    def _load(self):
-        rospy.loginfo("[RL Node] Load and Initialize Parameters...")
-
-        self.RATE = rospy.Rate(2) # loop frequency
-        self.GRAVITY = -9.8
-
-        # action noise
-        noise_stddev = 0.1
-        self.noise_stddev = noise_stddev
-
-        # action space
-        self.action_space = BlimpActionSpace()
-        self.dU = self.action_space.dU
-        # self.action = (self.action_space.high + self.action_space.low)/2
-
-        # observation space
         '''
         state
         0:2 relative angle
@@ -79,26 +51,78 @@ class BlimpEnv():
         9:11 velocity
         12:14 acceleration
         '''
-        self.observation_space = BlimpObservationSpace()
-        self.dO = self.observation_space.dO
+        self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        self.high = np.array([pi, pi, pi, pi/2, pi/2, pi/2, 10, 10, 10, 5, 5, 5, 2 ,2 ,2])
+        self.low = -self.high
+        self.shape = self.observation_space.shape
+        self.dO = self.observation_space.shape[0]
+
+class BlimpEnv(gym.Env):
+
+    def __init__(self, SLEEP_RATE = 2, USE_MPC=True):
+        super(BlimpEnv, self).__init__()
+
+        rospy.init_node('RL_node', anonymous=False)
+        rospy.loginfo("[RL Node] Initialising...")
+
+        self.RATE = rospy.Rate(SLEEP_RATE) # loop frequency
+        self.EPISODE_LENGTH = 30 * SLEEP_RATE # 30 sec
+        self.use_MPC = USE_MPC
+
+        self._load()
+        self._create_pubs_subs()
+
+        self.gaz = GazeboConnection(True, "WORLD")
+
+        rospy.loginfo("[RL Node] Initialized")
+
+    def _load(self):
+        rospy.loginfo("[RL Node] Load and Initialize Parameters...")
+
+        self.GRAVITY = 9.81
+
+        # action noise
+        noise_stddev = 0.1
+        self.noise_stddev = noise_stddev
+
+        # action space
+        act_space = BlimpActionSpace()
+        self.act_high = act_space.high
+        self.action_space = spaces.Box(low=-1, high=1,
+                                        shape=act_space.shape, dtype=np.float32)
+
+        # observation space
+        obs_space = BlimpObservationSpace()
+        self.obs_high = obs_space.high
+
+        self.observation_space = spaces.Box(low=-1, high=1,
+                                            shape=obs_space.shape, dtype=np.float32)
 
         # msgs initialize
-        self.angle = [0,0,0]
-        self.target_angle = [0,0,0]
-        self.angular_velocity = [0,0,0]
-        self.position = [0,0,0]
-        self.target_position = [0,0,0]
-        self.velocity = [0,0,0]
-        self.linear_acceleration = [0,0,0]
+        self.angle = np.array((0,0,0))
+        self.target_angle = np.array((0,0,0))
+        self.angular_velocity = np.array((0,0,0))
+        self.position = np.array((0,0,0))
+        self.target_position = np.array((0,0,0))
+        self.velocity = np.array((0,0,0))
+        self.linear_acceleration = np.array((0,0,0))
         self.reward = Float64()
 
         # MPC
         self.MPC_HORIZON = 15
-        self.SELECT_MPC_TARGET = 10
-        self.MPC_position_target = []
-        self.MPC_attitude_target = []
+        self.SELECT_MPC_TARGET = 7
+        self.MPC_position_target = np.array((0,0,0))
+        self.MPC_attitude_target = np.array((0,0,0))
+
+        # misc
+        self.env_reset_mse_threshold = 1700
+        self.cnt=0
+        self.timestep=1
+        self.pub_and_sub = False
 
         rospy.loginfo("[RL Node] Load and Initialize Parameters Finished")
+
+        
 
     def _create_pubs_subs(self):
         rospy.loginfo("[RL Node] Create Subscribers and Publishers...")
@@ -148,6 +172,7 @@ class BlimpEnv():
             queue_size=60)
 
         rospy.loginfo("[RL Node] Subscribers and Publishers Created")
+        self.pub_and_sub = True
 
     def _reward_callback(self,msg):
         """
@@ -198,7 +223,7 @@ class BlimpEnv():
 
         ax = -1*msg.linear_acceleration.x
         ay = msg.linear_acceleration.y
-        az = -1*msg.linear_acceleration.z + self.GRAVITY
+        az = msg.linear_acceleration.z - self.GRAVITY
 
         # from Quaternion to Euler Angle
         euler = MyTF.euler_from_quaternion(a,b,c,d)
@@ -482,18 +507,19 @@ class BlimpEnv():
         return euler     
           
     def step(self,action):
+        self.timestep += 1
+        action = self.act_high * action
         act = Float64MultiArray()
         self.action = action
         act.data = action
         self.action_publisher.publish(act)
-
         self.RATE.sleep()
-
         obs, reward, done = self._get_obs()
         return obs, reward, done, {}
 
     def reset(self):
         self.gaz.resetSim()
+        self.timestep = 1
         obs, reward, done = self._get_obs()
         return obs
 
@@ -503,11 +529,13 @@ class BlimpEnv():
         return action
 
     def _get_obs(self):
-        # relative_angle = self.target_angle - self.angle 
-        # relative_distance = self.target_position - self.position;
-        relative_angle = self.MPC_attitude_target - self.angle
-        relative_distance = self.MPC_position_target - self.position
-
+        if (self.use_MPC):
+            relative_angle = self.MPC_attitude_target - self.angle
+            relative_distance = self.MPC_position_target - self.position
+        else:
+            relative_angle = self.target_angle - self.angle 
+            relative_distance = self.target_position - self.position
+        
         #extend state
         state = []
         state.extend(relative_angle)
@@ -515,9 +543,8 @@ class BlimpEnv():
         state.extend(relative_distance)
         state.extend(self.velocity)
         state.extend(self.linear_acceleration)
-
-        # state.extend(self.target_angle)
-        # state.extend(self.target_position)
+        state = np.array(state)
+        state = state / self.obs_high #normalize
 
         #extend reward
         if self.reward is None:
@@ -525,7 +552,9 @@ class BlimpEnv():
         else:
             reward = self.reward.data
 
-        #done is not used in this experiment
+        #done is used to reset environment when episode finished
         done = False
+        if (self.timestep%(self.EPISODE_LENGTH+1)==0):
+            done = True
 
         return state, reward, done
