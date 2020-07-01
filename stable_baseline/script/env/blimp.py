@@ -36,8 +36,7 @@ class BlimpActionSpace():
         7: right fin
         '''
         self.action_space = np.array([0, 0, 0, 0, 0, 0, 0, 0])
-        self.high = np.array([70, 70, 30, pi/2, pi/9, pi/9, pi/9, pi/9])
-        self.low = -self.high
+        self.act_bnd = np.array([70, 70, 30, pi/2, pi/9, pi/9, pi/9, pi/9])
         self.shape = self.action_space.shape
         self.dU = self.action_space.shape[0]
 
@@ -52,8 +51,7 @@ class BlimpObservationSpace():
         12:14 acceleration
         '''
         self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        self.high = np.array([pi, pi, pi, pi/2, pi/2, pi/2, 10, 10, 10, 5, 5, 5, 2 ,2 ,2])
-        self.low = -self.high
+        self.obs_bnd = np.array([pi, pi, pi, pi/2, pi/2, pi/2, 10, 10, 10, 5, 5, 5, 2 ,2 ,2])
         self.shape = self.observation_space.shape
         self.dO = self.observation_space.shape[0]
 
@@ -87,14 +85,13 @@ class BlimpEnv(gym.Env):
 
         # action space
         act_space = BlimpActionSpace()
-        self.act_high = act_space.high
+        self.act_bnd = act_space.act_bnd
         self.action_space = spaces.Box(low=-1, high=1,
                                         shape=act_space.shape, dtype=np.float32)
 
         # observation space
         obs_space = BlimpObservationSpace()
-        self.obs_high = obs_space.high
-
+        self.obs_bnd = obs_space.obs_bnd
         self.observation_space = spaces.Box(low=-1, high=1,
                                             shape=obs_space.shape, dtype=np.float32)
 
@@ -115,12 +112,13 @@ class BlimpEnv(gym.Env):
         self.MPC_attitude_target = np.array((0,0,0))
 
         # misc
-        self.env_reset_mse_threshold = 1700
         self.cnt=0
         self.timestep=1
         self.pub_and_sub = False
 
         rospy.loginfo("[RL Node] Load and Initialize Parameters Finished")
+
+        
 
     def _create_pubs_subs(self):
         rospy.loginfo("[RL Node] Create Subscribers and Publishers...")
@@ -506,7 +504,7 @@ class BlimpEnv(gym.Env):
           
     def step(self,action):
         self.timestep += 1
-        action = self.act_high * action
+        action = self.act_bnd * action
         act = Float64MultiArray()
         self.action = action
         act.data = action
@@ -542,7 +540,7 @@ class BlimpEnv(gym.Env):
         state.extend(self.velocity)
         state.extend(self.linear_acceleration)
         state = np.array(state)
-        state = state / self.obs_high #normalize
+        state = state / self.obs_bnd #normalize
 
         #extend reward
         if self.reward is None:
@@ -556,3 +554,4 @@ class BlimpEnv(gym.Env):
             done = True
 
         return state, reward, done
+
