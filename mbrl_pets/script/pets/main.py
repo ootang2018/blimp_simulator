@@ -37,7 +37,7 @@ if __name__ == "__main__":
     ctrl_type = "MPC"
     ctrl_arg = []
     override = []
-    logdir = '/home/yliu_local/blimpRL_ws/src/RL_log'
+    logdir = '/home/yliu_local/blimpRL_ws/src/RL_log/pets_log'
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-env', type=str, default=env,

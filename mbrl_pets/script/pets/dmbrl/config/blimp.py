@@ -15,10 +15,10 @@ from dmbrl.modeling.layers import FC
 
 class BlimpConfigModule:
     ENV_NAME = "blimp"
-    TASK_HORIZON = 60
+    TASK_HORIZON = 60 #60
     NTRAIN_ITERS = 500
     NROLLOUTS_PER_ITER = 1
-    PLAN_HOR = 15
+    PLAN_HOR = 5 # 5 7 10 13 15
     MODEL_IN, MODEL_OUT = 23, 15 
 
     def __init__(self):
@@ -75,8 +75,8 @@ class BlimpConfigModule:
     @staticmethod
     def obs_cost_fn(obs):
         w_dist = 0.8
-        w_ang = 0.1
-        w_dir = 0.1
+        w_ang = 0.05
+        w_dir = 0.05
 
         '''
         state
@@ -100,7 +100,7 @@ class BlimpConfigModule:
 
     @staticmethod
     def ac_cost_fn(acs):
-        w_act = 0.0
+        w_act = 0.1
 
         # define action cost
         act_mse_cost = tf.reduce_sum(tf.square(acs), axis=1)

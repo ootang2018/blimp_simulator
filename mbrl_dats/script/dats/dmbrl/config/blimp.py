@@ -16,7 +16,7 @@ class BlimpConfigModule:
     TASK_HORIZON = 60 #60
     NTRAIN_ITERS = 500
     NROLLOUTS_PER_ITER = 1
-    PLAN_HOR = 10
+    PLAN_HOR = 5 # 5 7 10 13 15
     INIT_VAR = 0.25
     MODEL_IN, MODEL_OUT = 23, 15 ### 
 
