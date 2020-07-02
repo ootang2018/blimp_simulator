@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /RobotModel1/Links1
         - /TF1/Tree1
         - /Odometry1/Shape1
       Splitter Ratio: 0.6470588445663452
@@ -69,7 +68,7 @@ Visualization Manager:
       Collision Enabled: false
       Enabled: true
       Links:
-        All Links Enabled: true
+        All Links Enabled: false
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
@@ -82,27 +81,27 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/bot_rud_joint_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/bot_rud_motor_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/bot_rud_part1_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/bot_rud_part2_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/gondola_body_link:
           Alpha: 1
           Show Axes: false
@@ -112,12 +111,12 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/gondola_right_support_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/gps_link:
           Alpha: 1
           Show Axes: false
@@ -134,27 +133,27 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/left_elv_joint_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/left_elv_part1_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/left_elv_part2_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/left_wing_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/odometry_sensorgt_link:
           Alpha: 1
           Show Axes: false
@@ -163,47 +162,47 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/right_elv_joint_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/right_elv_part1_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/right_elv_part2_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/right_wing_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/stick_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/top_rud_joint_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/top_rud_part1_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/top_rud_part2_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/xtion_depth_frame:
           Alpha: 1
           Show Axes: false
@@ -216,7 +215,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         blimp/xtion_rgb_frame:
           Alpha: 1
           Show Axes: false
@@ -323,25 +322,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 57.717079162597656
+      Distance: 17.685081481933594
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.7079100608825684
-        Y: 1.2005441188812256
-        Z: 3.7740142345428467
+        X: 2.8313159942626953
+        Y: -1.5416395664215088
+        Z: 2.992899179458618
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5347944498062134
+      Pitch: 0.754797101020813
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.710785388946533
+      Yaw: 5.515791893005371
     Saved: ~
 Window Geometry:
   Displays:
