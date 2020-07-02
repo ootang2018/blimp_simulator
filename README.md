@@ -1,6 +1,7 @@
 ![Blimp Description file launch in Gazebo](image/blimp.png)
-Blimp Robot Description File 
+Blimp Simulator 
 =================================================================
+blimp description files for gazebo/ros style simulation based on a real robotic RC blimp model
 
 # Copyright and License
 
@@ -16,7 +17,7 @@ See: https://www.gnu.org/licenses/gpl-3.0.en.html
 ROS packages:
 
 * /blimp_description -- including blimp xml files that described the robot and supports Gazebo/ROS styled simulation. 
-* /blimp_gazebo_plugin -- some gazebo plugins
+* /blimp_gazebo_plugin -- `dynamic_volume` changes volume depend on flights altitude, `finliftdrag` generate aerilon lifting force, `normwind` generate random direction wind
 
 # Compiling
 Link or copy all flight and optional packages required into the *src* folder of your catkin workspace.

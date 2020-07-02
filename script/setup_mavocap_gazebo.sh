@@ -9,8 +9,6 @@ NAME=test
 
 WORLD="basic"
 
-enable_wind=false
-
 gui=true
 
 if [ -z "$COMSUCCESSRATE" ]; then

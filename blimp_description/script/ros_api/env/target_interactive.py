@@ -170,13 +170,13 @@ if __name__=="__main__":
     menu_handler.insert( "Second Entry", parent=sub_menu_handle, callback=processFeedback )
 
     while not rospy.is_shutdown():
-        x = np.random.uniform(-20,20)
-        y = np.random.uniform(-20,20)
-        z = np.random.uniform(1,20)
+        x = np.random.uniform(-5,5)
+        y = np.random.uniform(-5,5)
+        z = 7#np.random.uniform(8,8)
 
         phi = 0
         the = 0
-        psi = np.random.uniform(-pi,pi)
+        psi = 0#np.random.uniform(-pi,pi)
         q = quaternion_from_euler(phi, the, psi)
 
         rospy.loginfo("[Target Node] POSE_UPDATE IN LOCAL FRAME")
