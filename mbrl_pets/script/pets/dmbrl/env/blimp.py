@@ -107,7 +107,7 @@ class BlimpEnv(gym.Env):
 
         # MPC
         self.MPC_HORIZON = 15
-        self.SELECT_MPC_TARGET = 7
+        self.SELECT_MPC_TARGET = 5
         self.MPC_position_target = np.array((0,0,0))
         self.MPC_attitude_target = np.array((0,0,0))
 
@@ -117,8 +117,6 @@ class BlimpEnv(gym.Env):
         self.pub_and_sub = False
 
         rospy.loginfo("[RL Node] Load and Initialize Parameters Finished")
-
-        
 
     def _create_pubs_subs(self):
         rospy.loginfo("[RL Node] Create Subscribers and Publishers...")
@@ -170,7 +168,7 @@ class BlimpEnv(gym.Env):
         rospy.loginfo("[RL Node] Subscribers and Publishers Created")
         self.pub_and_sub = True
 
-    def _reward_callback(self,msg):
+    def _reward_callback(self, msg):
         """
         blimp/reward:
         Float64
@@ -379,12 +377,14 @@ class BlimpEnv(gym.Env):
 
         current_time = time.time()
         for i in range(self.MPC_HORIZON):
+            # NED to my frame
             x = msg.poses[i].position.x
             y = msg.poses[i].position.y
             z = msg.poses[i].position.z
             position_trajectory.append([y,-x,z])
             time_trajectory.append(0.1*i*time_mult+current_time)
             
+            # NED to world frame
             temp_pose_msg = Pose()
             temp_pose_msg.position.x = y 
             temp_pose_msg.position.y = x 
@@ -396,18 +396,11 @@ class BlimpEnv(gym.Env):
         yaw_trajectory.append(yaw_trajectory[-1])
 
         position_trajectory = np.array(position_trajectory)
-        time_trajectory = np.array(time_trajectory)
         yaw_trajectory = np.array(yaw_trajectory)
         self.MPC_rviz_trajectory_publisher.publish(MPC_rviz_trajectory)
 
-        (_,
-         _,
-         MPC_yaw_cmd) = self.trajectory_control(
-                 position_trajectory,
-                 yaw_trajectory,
-                 time_trajectory, time.time())
         self.MPC_position_target = position_trajectory[self.SELECT_MPC_TARGET]
-        self.MPC_attitude_target = np.array((0.0, 0.0, MPC_yaw_cmd))
+        self.MPC_attitude_target = yaw_trajectory[1] # to avoid dramatic yaw change
 
     def MPC_target_publish(self):
         """
@@ -505,10 +498,12 @@ class BlimpEnv(gym.Env):
     def step(self,action):
         self.timestep += 1
         action = self.act_bnd * action
+
         act = Float64MultiArray()
         self.action = action
         act.data = action
         self.action_publisher.publish(act)
+
         self.RATE.sleep()
         obs, reward, done = self._get_obs()
         return obs, reward, done, {}
@@ -550,8 +545,13 @@ class BlimpEnv(gym.Env):
 
         #done is used to reset environment when episode finished
         done = False
+
         if (self.timestep%(self.EPISODE_LENGTH+1)==0):
             done = True
 
-        return state, reward, done
+        #reset if blimp fly too far away
+        if any(np.abs(self.position)>= 50) :
+            self.gaz.resetSim()
+            reward -= 10
 
+        return state, reward, done

@@ -15,7 +15,7 @@ class BlimpConfigModule:
     ENV_NAME = "blimp"
     SLEEP_RATE = 10
     TASK_HORIZON = 30 * SLEEP_RATE # 30sec
-    NTRAIN_ITERS = 250 # ~4hr
+    NTRAIN_ITERS = 500 # ~4hr
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 15 # 5 7 10 13 15
     INIT_VAR = 0.25
