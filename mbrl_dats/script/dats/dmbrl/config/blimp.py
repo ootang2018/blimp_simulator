@@ -15,7 +15,7 @@ class BlimpConfigModule:
     ENV_NAME = "blimp"
     SLEEP_RATE = 10
     TASK_HORIZON = 30 * SLEEP_RATE # 30sec
-    NTRAIN_ITERS = 4*60 # 4hr
+    NTRAIN_ITERS = 250 # ~4hr
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 15 # 5 7 10 13 15
     INIT_VAR = 0.25
@@ -134,9 +134,9 @@ class BlimpConfigModule:
             model_dir=model_init_cfg.get("model_dir", None)
         ))
         if not model_init_cfg.get("load_model", False):
-            model.add(FC(75, input_dim=self.MODEL_IN, activation="swish", weight_decay=0.000025))
-            model.add(FC(75, activation="swish", weight_decay=0.00005))
-            model.add(FC(75, activation="swish", weight_decay=0.000075))
+            model.add(FC(100, input_dim=self.MODEL_IN, activation="swish", weight_decay=0.000025))
+            model.add(FC(100, activation="swish", weight_decay=0.00005))
+            model.add(FC(100, activation="swish", weight_decay=0.000075))
             model.add(FC(self.MODEL_OUT, weight_decay=0.0001))
         model.finalize(tf.train.AdamOptimizer, {"learning_rate": 0.001})
         return model
