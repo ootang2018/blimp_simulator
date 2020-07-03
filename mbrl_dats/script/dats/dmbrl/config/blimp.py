@@ -108,18 +108,18 @@ class BlimpConfigModule:
         12:14 acceleration
         '''
         # define distance cost
-        dist_cost = tf.linalg.normalize(obs[:, 6:9], ord='euclidean', axis=None, name=None)
-        dist_cost = -tf.math.tanh(dist_cost, name=None)
+        dist_cost = tf.norm(obs[:, 6:9], ord='euclidean', axis=None, name=None)
+        dist_cost = -tf.math.tanh(2*dist_cost, name=None)
         # dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 6:9]), axis=1)) # mse distance cost, not used
 
         # define angle cost (phi, the)
-        ang_cost = tf.mean(tf.abs(obs[:, 0:2]))
-        ang_cost = -tf.math.tanh(ang_cost, name=None)
+        ang_cost = tf.math.reduce_mean(tf.abs(obs[:, 0:2]))
+        ang_cost = -tf.math.tanh(5*ang_cost, name=None)
         # ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 0:2]), axis=1)) # mse angle, not used
 
         # define direction cost (psi)
         dir_cost = tf.abs(obs[:, 2])
-        dir_cost = -tf.math.tanh(dir_cost, name=None)
+        dir_cost = -tf.math.tanh(5*dir_cost, name=None)
         # dir_abs_cost = tf.abs(obs[:, 2]) # psi angle, not used
 
         return w_dist*dist_cost + w_ang*ang_cost + w_dir*dir_cost 
@@ -129,8 +129,8 @@ class BlimpConfigModule:
         w_act = 0.1
 
         # define action cost
-        act_cost = tf.linalg.normalize(acs, ord='euclidean', axis=None, name=None)
-        act_cost = -tf.math.tanh(act_cost, name=None)
+        act_cost = tf.norm(acs, ord='euclidean', axis=None, name=None)
+        act_cost = -tf.math.tanh(5*act_cost, name=None)
         # act_mse_cost = tf.reduce_sum(tf.square(acs), axis=1) #mse action, not used
 
         return w_act*act_cost
