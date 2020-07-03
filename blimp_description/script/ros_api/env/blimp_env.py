@@ -584,7 +584,7 @@ class BlimpEnv:
 
         # define angle reward
         reward_angle = np.mean(np.abs(state[0:3]))
-        reward_angle - np.tanh(reward_angle)
+        reward_angle = np.tanh(reward_angle)
         # reward_angle = np.sqrt((reward_angle**2).mean())  #mse error, not used
 
         # define action cost
