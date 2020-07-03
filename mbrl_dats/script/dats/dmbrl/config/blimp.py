@@ -96,8 +96,8 @@ class BlimpConfigModule:
     @staticmethod
     def obs_cost_fn(obs):
         w_dist = 0.90
-        w_ang = 0.05
-        w_dir = 0.05
+        w_ang = 0.025
+        w_dir = 0.025
 
         '''
         state
@@ -108,24 +108,32 @@ class BlimpConfigModule:
         12:14 acceleration
         '''
         # define distance cost
-        dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 6:9]), axis=1)) # mse distance
+        dist_cost = tf.linalg.normalize(obs[:, 6:9], ord='euclidean', axis=None, name=None)
+        dist_cost = -tf.math.tanh(dist_cost, name=None)
+        # dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 6:9]), axis=1)) # mse distance cost, not used
 
         # define angle cost (phi, the)
-        ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 0:2]), axis=1)) # mse angle
+        ang_cost = tf.mean(tf.abs(obs[:, 0:2]))
+        ang_cost = -tf.math.tanh(ang_cost, name=None)
+        # ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 0:2]), axis=1)) # mse angle, not used
 
         # define direction cost (psi)
-        dir_abs_cost = tf.abs(obs[:, 2]) # psi angle
+        dir_cost = tf.abs(obs[:, 2])
+        dir_cost = -tf.math.tanh(dir_cost, name=None)
+        # dir_abs_cost = tf.abs(obs[:, 2]) # psi angle, not used
 
-        return w_dist*dist_mse_cost + w_ang*ang_mse_cost + w_dir*dir_abs_cost 
+        return w_dist*dist_cost + w_ang*ang_cost + w_dir*dir_cost 
 
     @staticmethod
     def ac_cost_fn(acs):
-        w_act = 0.0
+        w_act = 0.1
 
         # define action cost
-        act_mse_cost = tf.reduce_sum(tf.square(acs), axis=1)
+        act_cost = tf.linalg.normalize(acs, ord='euclidean', axis=None, name=None)
+        act_cost = -tf.math.tanh(act_cost, name=None)
+        # act_mse_cost = tf.reduce_sum(tf.square(acs), axis=1) #mse action, not used
 
-        return w_act*act_mse_cost
+        return w_act*act_cost
 
     def nn_constructor(self, model_init_cfg):
         model = get_required_argument(model_init_cfg, "model_class", "Must provide model class")(DotMap(

@@ -35,9 +35,12 @@ class BlimpActionSpace():
         6: left fin
         7: right fin
         '''
+        STICK_LIMIT = pi/2
+        FIN_LIMIT = 0#pi/9
+        MOTOR_LIMIT = 70
+        MOTOR3_LIMIT = 0#30
         self.action_space = np.array([0, 0, 0, 0, 0, 0, 0, 0])
-        self.act_bnd = np.array([70, 70, 0, pi/2, 0, 0, 0, 0])
-        # self.act_bnd = np.array([70, 70, 30, pi/2, pi/9, pi/9, pi/9, pi/9])
+        self.act_bnd = np.array([MOTOR_LIMIT, MOTOR_LIMIT, MOTOR3_LIMIT, STICK_LIMIT, FIN_LIMIT, FIN_LIMIT, FIN_LIMIT, FIN_LIMIT])
         self.shape = self.action_space.shape
         self.dU = self.action_space.shape[0]
 
@@ -51,8 +54,17 @@ class BlimpObservationSpace():
         9:11 velocity
         12:14 acceleration
         '''
+        DISTANCE_BND = 50
+        ORIENTATION_BND = pi 
+        ORIENTATION_VELOCITY_BND = pi
+        VELOCITY_BND = 10
+        ACCELERATION_BND = 4
         self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        self.obs_bnd = np.array([2*pi, 2*pi, 2*pi, pi, pi, pi, 5, 5, 5, 4, 4, 4, 2 ,2 ,2])
+        self.obs_bnd = np.array([ORIENTATION_BND, ORIENTATION_BND, ORIENTATION_BND,
+            ORIENTATION_VELOCITY_BND, ORIENTATION_VELOCITY_BND, ORIENTATION_VELOCITY_BND,
+            DISTANCE_BND, DISTANCE_BND, DISTANCE_BND,
+            VELOCITY_BND, VELOCITY_BND, VELOCITY_BND,
+            ACCELERATION_BND ,ACCELERATION_BND ,ACCELERATION_BND])
         self.shape = self.observation_space.shape
         self.dO = self.observation_space.shape[0]
 
@@ -64,8 +76,10 @@ class BlimpEnv(gym.Env):
         rospy.init_node('RL_node', anonymous=False)
         rospy.loginfo("[RL Node] Initialising...")
 
+        self.SLEEP_RATE = SLEEP_RATE
         self.RATE = rospy.Rate(SLEEP_RATE) # loop frequency
-        self.EPISODE_LENGTH = 30 * SLEEP_RATE # 30 sec
+        self.EPISODE_TIME = 30 # 30 sec
+        self.EPISODE_LENGTH = self.EPISODE_TIME * self.SLEEP_RATE 
         self.use_MPC = USE_MPC
 
         self._load()
@@ -109,7 +123,7 @@ class BlimpEnv(gym.Env):
         # MPC
         self.MPC_HORIZON = 15
         self.SELECT_MPC_TARGET = 14
-        self.MPC_TARGET_UPDATE_RATE = self.EPISODE_LENGTH / 30
+        self.MPC_TARGET_UPDATE_RATE = self.SLEEP_RATE * 2 
         self.MPC_position_target = np.array((0,0,0))
         self.MPC_attitude_target = np.array((0,0,0))
 
@@ -485,6 +499,21 @@ class BlimpEnv(gym.Env):
             relative_angle = self.target_angle - self.angle 
             relative_distance = self.target_position - self.position
         
+        if relative_angle[0] > np.pi:
+            relative_angle[0] -= 2*np.pi
+        elif  relative_angle[0] < -np.pi:
+            relative_angle[0] += 2*np.pi
+
+        if relative_angle[1] > np.pi:
+            relative_angle[1] -= 2*np.pi
+        elif  relative_angle[1] < -np.pi:
+            relative_angle[1] += 2*np.pi
+
+        if relative_angle[2] > np.pi:
+            relative_angle[2] -= 2*np.pi
+        elif  relative_angle[2] < -np.pi:
+            relative_angle[2] += 2*np.pi
+
         #extend state
         state = []
         state.extend(relative_angle)
@@ -493,7 +522,7 @@ class BlimpEnv(gym.Env):
         state.extend(self.velocity)
         state.extend(self.linear_acceleration)
         state = np.array(state)
-        state = state / self.obs_bnd #normalize
+        state = state / (2*self.obs_bnd) #normalize
 
         #extend reward
         if self.reward is None:
