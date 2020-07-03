@@ -15,7 +15,7 @@ class BlimpConfigModule:
     ENV_NAME = "blimp"
     SLEEP_RATE = 10
     TASK_HORIZON = 30 * SLEEP_RATE # 30sec
-    NTRAIN_ITERS = 500 # ~4hr
+    NTRAIN_ITERS = 250 # 500
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 15 # 5 7 10 13 15
     INIT_VAR = 0.25
@@ -95,8 +95,8 @@ class BlimpConfigModule:
     """
     @staticmethod
     def obs_cost_fn(obs):
-        w_dist = 0.95
-        w_ang = 0.0
+        w_dist = 0.90
+        w_ang = 0.05
         w_dir = 0.05
 
         '''

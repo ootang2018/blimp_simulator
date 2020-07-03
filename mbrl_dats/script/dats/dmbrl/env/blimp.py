@@ -36,7 +36,8 @@ class BlimpActionSpace():
         7: right fin
         '''
         self.action_space = np.array([0, 0, 0, 0, 0, 0, 0, 0])
-        self.act_bnd = np.array([70, 70, 30, pi/2, pi/9, pi/9, pi/9, pi/9])
+        self.act_bnd = np.array([70, 70, 0, pi/2, 0, 0, 0, 0])
+        # self.act_bnd = np.array([70, 70, 30, pi/2, pi/9, pi/9, pi/9, pi/9])
         self.shape = self.action_space.shape
         self.dU = self.action_space.shape[0]
 
@@ -51,7 +52,7 @@ class BlimpObservationSpace():
         12:14 acceleration
         '''
         self.observation_space = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        self.obs_bnd = np.array([pi, pi, pi, pi/2, pi/2, pi/2, 10, 10, 10, 5, 5, 5, 2 ,2 ,2])
+        self.obs_bnd = np.array([2*pi, 2*pi, 2*pi, pi, pi, pi, 5, 5, 5, 4, 4, 4, 2 ,2 ,2])
         self.shape = self.observation_space.shape
         self.dO = self.observation_space.shape[0]
 
@@ -107,7 +108,8 @@ class BlimpEnv(gym.Env):
 
         # MPC
         self.MPC_HORIZON = 15
-        self.SELECT_MPC_TARGET = 5
+        self.SELECT_MPC_TARGET = 14
+        self.MPC_TARGET_UPDATE_RATE = self.EPISODE_LENGTH / 30
         self.MPC_position_target = np.array((0,0,0))
         self.MPC_attitude_target = np.array((0,0,0))
 
@@ -399,8 +401,10 @@ class BlimpEnv(gym.Env):
         yaw_trajectory = np.array(yaw_trajectory)
         self.MPC_rviz_trajectory_publisher.publish(MPC_rviz_trajectory)
 
-        self.MPC_position_target = position_trajectory[self.SELECT_MPC_TARGET]
-        self.MPC_attitude_target = yaw_trajectory[1] # to avoid dramatic yaw change
+        # Update MPC target 
+        if (self.timestep%self.MPC_TARGET_UPDATE_RATE ==0):
+            self.MPC_position_target = position_trajectory[self.SELECT_MPC_TARGET]
+            self.MPC_attitude_target = yaw_trajectory[self.SELECT_MPC_TARGET] # to avoid dramatic yaw change
 
     def MPC_target_publish(self):
         """
@@ -440,52 +444,6 @@ class BlimpEnv(gym.Env):
         target_pose.pose.pose.position.y = self.target_position[0]; 
         target_pose.pose.pose.position.z = self.target_position[2];
         self.MPC_target_publisher.publish(target_pose)
-
-    def trajectory_control(self, position_trajectory, yaw_trajectory, time_trajectory, current_time):
-        """Generate a commanded position, velocity and yaw based on the trajectory
-
-        Args:
-            position_trajectory: list of 3-element numpy arrays, NED positions
-            yaw_trajectory: list yaw commands in radians
-            time_trajectory: list of times (in seconds) that correspond to the position and yaw commands
-            current_time: float corresponding to the current time in seconds
-
-        Returns: tuple (commanded position, commanded velocity, commanded yaw)
-
-        """
-
-        ind_min = np.argmin(np.abs(np.array(time_trajectory) - current_time))
-        time_ref = time_trajectory[ind_min]
-
-
-        if current_time < time_ref:
-            position0 = position_trajectory[ind_min - 1]
-            position1 = position_trajectory[ind_min]
-
-            time0 = time_trajectory[ind_min - 1]
-            time1 = time_trajectory[ind_min]
-            yaw_cmd = yaw_trajectory[ind_min - 1]
-
-        else:
-            yaw_cmd = yaw_trajectory[ind_min]
-            if ind_min >= len(position_trajectory) - 1:
-                position0 = position_trajectory[ind_min]
-                position1 = position_trajectory[ind_min]
-
-                time0 = 0.0
-                time1 = 1.0
-            else:
-
-                position0 = position_trajectory[ind_min]
-                position1 = position_trajectory[ind_min + 1]
-                time0 = time_trajectory[ind_min]
-                time1 = time_trajectory[ind_min + 1]
-
-        position_cmd = (position1 - position0) * \
-                        (current_time - time0) / (time1 - time0) + position0
-        velocity_cmd = (position1 - position0) / (time1 - time0)
-
-        return (position_cmd, velocity_cmd, yaw_cmd)
 
     def _euler_from_pose(self, pose):
         a = pose.orientation.x
