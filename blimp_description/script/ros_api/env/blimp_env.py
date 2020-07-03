@@ -49,8 +49,8 @@ class BlimpObservationSpace():
         9:11 velocity
         12:14 acceleration
         '''
-        DISTANCE_BND = 50 * 2
-        ORIENTATION_BND = pi * 2
+        DISTANCE_BND = 50 
+        ORIENTATION_BND = pi 
         ORIENTATION_VELOCITY_BND = pi
         VELOCITY_BND = 10
         ACCELERATION_BND = 4
