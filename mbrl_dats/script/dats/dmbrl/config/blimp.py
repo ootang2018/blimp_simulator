@@ -126,7 +126,7 @@ class BlimpConfigModule:
 
     @staticmethod
     def ac_cost_fn(acs):
-        w_act = 0.1
+        w_act = 0.05
 
         # define action cost
         act_cost = tf.norm(acs, ord='euclidean', axis=None, name=None)
