@@ -577,6 +577,10 @@ class BlimpEnv:
         state.extend(self.linear_acceleration)
         state = np.array(state)
 
+        # define altitude reward
+        reward_alt = np.abs(state[8])
+        reward_alt = np.tanh(0.1*reward_alt)
+
         # define distance reward
         reward_distance = np.linalg.norm(state[6:9])
         reward_distance = np.tanh(0.1*reward_distance)
@@ -594,7 +598,9 @@ class BlimpEnv:
         # reward_action = np.sqrt((reward_action**2).mean()) #mse error, not used
 
         # sum up and publish
-        reward = -0.8*reward_distance - 0.1*reward_angle - 0.1*reward_action
+        # reward = -0.9*reward_alt - 0.1*reward_action # alt task
+        reward = -0.9*reward_distance - 0.1*reward_action # takeoff task
+        # reward = -0.8*reward_distance - 0.1*reward_angle - 0.1*reward_action # hover task
 
         self.pub_reward.publish(reward)
 
