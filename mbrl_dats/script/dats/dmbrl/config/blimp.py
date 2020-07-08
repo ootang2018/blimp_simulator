@@ -5,6 +5,7 @@ from __future__ import absolute_import
 import numpy as np
 import tensorflow.compat.v1 as tf ###
 tf.disable_eager_execution() ###
+sess = tf.InteractiveSession()
 
 from dotmap import DotMap
 
@@ -17,7 +18,7 @@ class BlimpConfigModule:
     TASK_HORIZON = 30 * SLEEP_RATE # 30sec
     NTRAIN_ITERS = 250 # 500
     NROLLOUTS_PER_ITER = 1
-    PLAN_HOR = 15 # 5 7 10 13 15
+    PLAN_HOR = 10 #5 10 15 20
     INIT_VAR = 0.25
     MODEL_IN, MODEL_OUT = 23, 15 ### 
 
@@ -95,9 +96,9 @@ class BlimpConfigModule:
     """
     @staticmethod
     def obs_cost_fn(obs):
-        w_dist = 0.90
-        w_ang = 0.025
-        w_dir = 0.025
+        w_alt = 0.9
+        w_dist = 0#0.90
+        w_ang = 0#0.025
 
         '''
         state
@@ -108,29 +109,31 @@ class BlimpConfigModule:
         12:14 acceleration
         '''
         # define distance cost
-        dist_cost = tf.norm(obs[:, 6:9], ord='euclidean', axis=None, name=None)
-        dist_cost = -tf.math.tanh(2*dist_cost, name=None)
-        # dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 6:9]), axis=1)) # mse distance cost, not used
+        alt_cost = tf.abs(obs[:, 8])
+        alt_cost = tf.math.tanh(0.05*alt_cost, name=None) #value~-0.3
 
-        # define angle cost (phi, the)
-        ang_cost = tf.math.reduce_mean(tf.abs(obs[:, 0:2]))
-        ang_cost = -tf.math.tanh(2*ang_cost, name=None)
-        # ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 0:2]), axis=1)) # mse angle, not used
+        # temporarily disabled 
+        dist_cost = obs[:, 6:9]
+        dist_cost = tf.norm(dist_cost, ord='euclidean', axis=1, name=None)
+        dist_cost = tf.math.tanh(0.05*dist_cost, name=None) #value~-0.3
 
-        # define direction cost (psi)
-        dir_cost = tf.abs(obs[:, 2])
-        dir_cost = -tf.math.tanh(2*dir_cost, name=None)
-        # dir_abs_cost = tf.abs(obs[:, 2]) # psi angle, not used
+        # define angle cost 
+        ang_cost = obs[:, 0:3]
+        ang_cost = tf.math.reduce_mean(tf.abs(ang_cost), axis=1)
+        ang_cost = tf.math.tanh(ang_cost, name=None) #value~-0.8
 
-        return w_dist*dist_cost + w_ang*ang_cost + w_dir*dir_cost 
+        #plotter
+        # dist_cost = tf.Print(dist_cost,[dist_cost],message="This is dist_cost: ")
+
+        return w_alt*alt_cost + w_dist*dist_cost + w_ang*ang_cost
 
     @staticmethod
     def ac_cost_fn(acs):
-        w_act = 0.05
+        w_act = 0.1#0.05
 
         # define action cost
-        act_cost = tf.norm(acs, ord='euclidean', axis=None, name=None)
-        act_cost = -tf.math.tanh(2*act_cost, name=None)
+        act_cost = tf.reduce_sum(tf.square(acs), axis=1) #mse action
+        act_cost = tf.math.tanh(act_cost, name=None)
         # act_mse_cost = tf.reduce_sum(tf.square(acs), axis=1) #mse action, not used
 
         return w_act*act_cost

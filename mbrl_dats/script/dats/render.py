@@ -39,10 +39,19 @@ def main(env, ctrl_type, ctrl_args, overrides, logdir, args):
 
 if __name__ == "__main__":   
     env = "blimp"
+
+    # change model dir for rendering
+    logdir = "/home/yliu_local/blimp_data/DATS/ALT/3act"
+    model_dir = "/home/yliu_local/blimp_data/DATS/ALT/3act/exp1"
+
     ctrl_arg = [("opt-type","CEM"),("model-type","PE"),("prop-type","E")]
     override = [("exp_cfg.sim_cfg.delay_hor" ,"5"),("ctrl_cfg.prop_cfg.delay_step", "5")]
-    logdir = "/home/yliu_local/blimp_data/DATS_MPC/ALT/3act"
-
+    override.append(["ctrl_cfg.prop_cfg.model_init_cfg.model_dir", model_dir])
+    override.append(["ctrl_cfg.prop_cfg.model_init_cfg.load_model", "True"])
+    override.append(["ctrl_cfg.prop_cfg.model_pretrained", "True"])
+    override.append(["exp_cfg.exp_cfg.ninit_rollouts", "0"])
+    override.append(["exp_cfg.exp_cfg.ntrain_iters", "1"])
+    override.append(["exp_cfg.log_cfg.nrecord", "1"])
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-env', type=str, default=env,

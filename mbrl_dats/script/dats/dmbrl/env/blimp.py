@@ -54,7 +54,7 @@ class BlimpObservationSpace():
         9:11 velocity
         12:14 acceleration
         '''
-        DISTANCE_BND = 10#50
+        DISTANCE_BND = 50
         ORIENTATION_BND = pi 
         ORIENTATION_VELOCITY_BND = pi
         VELOCITY_BND = 10
@@ -123,7 +123,7 @@ class BlimpEnv(gym.Env):
         # MPC
         self.MPC_HORIZON = 15
         self.SELECT_MPC_TARGET = 14
-        self.MPC_TARGET_UPDATE_RATE = self.SLEEP_RATE * 2 
+        self.MPC_TARGET_UPDATE_RATE = self.SLEEP_RATE * 3 
         self.MPC_position_target = np.array((0,0,0))
         self.MPC_attitude_target = np.array((0,0,0))
 
@@ -522,7 +522,6 @@ class BlimpEnv(gym.Env):
         state.extend(self.velocity)
         state.extend(self.linear_acceleration)
         state = np.array(state)
-        state = state / (2*self.obs_bnd) #normalize
 
         #extend reward
         if self.reward is None:
