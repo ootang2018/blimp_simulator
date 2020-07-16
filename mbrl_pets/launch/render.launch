@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<launch>
+	<!--<node name="agent" pkg="mbrl_pets" type="agent.py" output="screen"/>-->
+	<node name="render" pkg="mbrl_pets" type="render.py" output="screen"/>
+</launch>

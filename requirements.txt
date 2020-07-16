@@ -1,0 +1,10 @@
+rospkg 
+pyyaml
+dotmap==1.2.20
+future==0.16.0
+gpflow
+numpy==1.14.0
+scipy==0.19.0
+tensorflow-gpu==2.0.0
+tqdm==4.19.4
+termcolor

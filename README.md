@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ![Blimp Description file launch in Gazebo](image/blimp.png)
 Blimp Simulator 
 =================================================================
@@ -168,5 +169,22 @@ $ conda activate py3
 $ roslaunch blimp_description controls_flyer
 ```
 ![MPC planner](image/MPC_planner.png)
+=======
+Blimp Reinforcement Learning Agent
+===================================================
+
+blimpRL is a subdirectory to blimp_simulator (https://github.com/ootang2018/blimp_simulator). It contains different reinforcement learning agents that are integrated with blimp ros environment. 
+
+# Contents
+* mbrl_pets (https://github.com/kchua/handful-of-trials)
+* mbrl_mbpo (https://github.com/jannerm/mbpo)
+* mbrl_dats (https://github.com/baimingc/dambrl)
+
+it is encouraged to checkout their github page and paper for more information
+
+
+
+
+>>>>>>> ad27afa7c27c0d43a7fdafbc40b79602530abb53
 
 
