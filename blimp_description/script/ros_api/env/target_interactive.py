@@ -170,6 +170,7 @@ if __name__=="__main__":
     menu_handler.insert( "Second Entry", parent=sub_menu_handle, callback=processFeedback )
 
     while not rospy.is_shutdown():
+<<<<<<< HEAD
         x = 0
         y = 3
         z = 7
@@ -186,6 +187,26 @@ if __name__=="__main__":
         phi = 0
         the = 0
         psi = 0#np.random.uniform(-pi,pi) #currently target orientation is not used
+=======
+	#TEST
+        x = np.random.uniform(-5,5)
+        y = np.random.uniform(-5,5)
+        z = 7
+
+	#TAKEOFF
+        #x = np.random.uniform(-5,5)
+        #y = np.random.uniform(-5,5)
+        #z = 7
+
+	#Cruising
+        #x = np.random.uniform(-30,30)
+        #y = np.random.uniform(-30,30)
+        #z = np.random.uniform(1,30)
+
+        phi = 0
+        the = 0
+        psi = np.random.uniform(-pi,pi) #currently target orientation is not used
+>>>>>>> 0329fb7a578fd08c41581ae7fbec3add810b5d7f
         q = quaternion_from_euler(phi, the, psi)
 
         rospy.loginfo("[Target Node] POSE_UPDATE IN LOCAL FRAME")
@@ -200,6 +221,10 @@ if __name__=="__main__":
 
         rospy.Timer(rospy.Duration(0.01), frameCallback)
 
+<<<<<<< HEAD
         time.sleep(480)
+=======
+        time.sleep(120)
+>>>>>>> 0329fb7a578fd08c41581ae7fbec3add810b5d7f
 
     rospy.spin()
