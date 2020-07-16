@@ -15,15 +15,16 @@ from dmbrl.modeling.layers import FC
 
 class BlimpConfigModule:
     ENV_NAME = "blimp"
-    SLEEP_RATE = 10
-    TASK_HORIZON = 30 * SLEEP_RATE # 30sec
-    NTRAIN_ITERS = 4*60 # 4hr
+    SLEEP_RATE = 2# 1 2 5 10 # also change blimp.py 
+    TASK_HORIZON = 30 * SLEEP_RATE # 30 120
+    NTRAIN_ITERS = 250 # 250 500 2000
     NROLLOUTS_PER_ITER = 1
-    PLAN_HOR = 5 # 5 7 10 13 15
+    PLAN_HOR = 5 # 5 7 10 15 20
     MODEL_IN, MODEL_OUT = 23, 15 
 
     def __init__(self):
         from dmbrl.env.blimp import BlimpEnv
+        # import ipdb;ipdb.set_trace()
         self.ENV = BlimpEnv()
         cfg = tf.ConfigProto()
         cfg.gpu_options.allow_growth = True
@@ -75,9 +76,9 @@ class BlimpConfigModule:
     """
     @staticmethod
     def obs_cost_fn(obs):
-        w_dist = 0.8
-        w_ang = 0.05
-        w_dir = 0.05
+        w_alt = 0#0.9
+        w_dist = 0.9
+        w_ang = 0.0#0.025
 
         '''
         state
@@ -87,26 +88,34 @@ class BlimpConfigModule:
         9:11 velocity
         12:14 acceleration
         '''
+        # define altitude cost
+        alt_cost = tf.abs(obs[:, 8])
+        alt_cost = tf.math.tanh(0.05*alt_cost, name=None) #value~-0.3
 
-        # define distance cost
-        dist_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 6:9]), axis=1)) # mse distance
+        # define distance cost, temporarily disabled 
+        dist_cost = obs[:, 6:9]
+        dist_cost = tf.norm(dist_cost, ord='euclidean', axis=1, name=None)
+        dist_cost = tf.math.tanh(0.05*dist_cost, name=None) #value~-0.3
 
-        # define angle cost (phi, the)
-        ang_mse_cost = tf.sqrt(tf.reduce_sum(tf.square(obs[:, 0:2]), axis=1)) # mse angle
+        # define angle cost 
+        ang_cost = obs[:, 0:3]
+        ang_cost = tf.math.reduce_mean(tf.abs(ang_cost), axis=1)
+        ang_cost = tf.math.tanh(ang_cost, name=None) #value~-0.8
 
-        # define direction cost (psi)
-        dir_abs_cost = tf.abs(obs[:, 2]) # psi angle
+        #plotter
+        # dist_cost = tf.Print(dist_cost,[dist_cost],message="This is dist_cost: ")
 
-        return w_dist*dist_mse_cost + w_ang*ang_mse_cost + w_dir*dir_abs_cost ###
+        return w_alt*alt_cost + w_dist*dist_cost + w_ang*ang_cost
 
     @staticmethod
     def ac_cost_fn(acs):
         w_act = 0.1
-
+        
         # define action cost
-        act_mse_cost = tf.reduce_sum(tf.square(acs), axis=1)
+        act_cost = tf.norm(acs, ord='euclidean', axis=1, name=None) 
+        act_cost = tf.math.tanh(0.2*act_cost, name=None)
 
-        return w_act*act_mse_cost
+        return w_act*act_cost
 
     def nn_constructor(self, model_init_cfg):
         model = get_required_argument(model_init_cfg, "model_class", "Must provide model class")(DotMap(
@@ -115,9 +124,9 @@ class BlimpConfigModule:
             model_dir=model_init_cfg.get("model_dir", None)
         ))
         if not model_init_cfg.get("load_model", False):
-            model.add(FC(75, input_dim=self.MODEL_IN, activation="swish", weight_decay=0.000025))
-            model.add(FC(75, activation="swish", weight_decay=0.00005))
-            model.add(FC(75, activation="swish", weight_decay=0.000075))
+            model.add(FC(100, input_dim=self.MODEL_IN, activation="swish", weight_decay=0.000025))
+            model.add(FC(100, activation="swish", weight_decay=0.00005))
+            model.add(FC(100, activation="swish", weight_decay=0.000075))
             model.add(FC(self.MODEL_OUT, weight_decay=0.0001))
         model.finalize(tf.train.AdamOptimizer, {"learning_rate": 0.001})
         return model

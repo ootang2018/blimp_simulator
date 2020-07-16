@@ -11,17 +11,16 @@ import rospy
 
 from dotmap import DotMap
 
-from dmbrl import MBRLExperiment
-from dmbrl.controller import MPC
+from dmbrl.misc.MBExp import MBRLExperiment
+from dmbrl.controller.MPC import MPC
 from dmbrl.config import create_config
 
 def main(env, ctrl_type, ctrl_args, overrides, logdir):
-    rospy.init_node('main_node', anonymous=False)
-    rospy.loginfo("Main Node Initialising...")
+
     ctrl_args = DotMap(**{key: val for (key, val) in ctrl_args})
 
     ## change this get access to the model
-    model_dir = "/home/yliu_local/blimpRL_ws/src/RL_log/pets_log/2020-01-18--12:14:55"
+    model_dir = "/home/rtallamraju/catkin_ws_py3/src/rl_log/pets_mpc/TAKEOFF/4act/exp_hor7_rate2"
 
     overrides.append(["ctrl_cfg.prop_cfg.model_init_cfg.model_dir", model_dir])
     overrides.append(["ctrl_cfg.prop_cfg.model_init_cfg.load_model", "True"])
@@ -48,6 +47,6 @@ if __name__ == "__main__":
     ctrl_type = "MPC"
     ctrl_args = []
     overrides = []
-    logdir = '/home/yliu_local/blimpRL_ws/src/RL_log/pets_log'
+    logdir = '/home/rtallamraju/catkin_ws_py3/src/rl_log/test/pets_mpc/takeoff/left'
 
     main(env, ctrl_type, ctrl_args, overrides, logdir)

@@ -37,7 +37,7 @@ if __name__ == "__main__":
     ctrl_type = "MPC"
     ctrl_arg = []
     override = []
-    logdir = '/home/yliu_local/blimpRL_ws/src/RL_log/pets_log'
+    logdir = '/home/rtallamraju/catkin_ws_py3/src/rl_log/pets/ALT/test' #change for different tasks
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-env', type=str, default=env,
@@ -50,7 +50,7 @@ if __name__ == "__main__":
                         help='Directory to which results will be logged (default: ./log)')
     parser.add_argument('-e_popsize', type=int, default=500,
                         help='different popsize to use')
-
+    #args = parser.parse_args()
     args = parser.parse_args(sys.argv[4:]) ###
-
+	
     main(args.env, "MPC", args.ctrl_arg, args.override, args.logdir)
